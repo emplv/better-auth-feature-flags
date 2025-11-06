@@ -1,0 +1,40 @@
+{
+  "name": "@emplv/better-auth-organization-features",
+  "version": "0.1.0",
+  "description": "Better Auth plugin for managing organization feature flags",
+  "main": "./dist/server/index.js",
+  "types": "./dist/server/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/server/index.js",
+      "types": "./dist/server/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client/index.js",
+      "types": "./dist/client/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "better-auth",
+    "plugin",
+    "organization",
+    "features",
+    "feature-flags"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "better-auth": "^1.3.34"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
