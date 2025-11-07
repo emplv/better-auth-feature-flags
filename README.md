@@ -55,6 +55,236 @@ const authClient = createAuthClient({
 });
 ```
 
+## Hooks
+
+The plugin supports before and after hooks for all actions, allowing you to intercept, modify, or skip operations. Hooks are optional and can be configured when initializing the plugin.
+
+### Hook Types
+
+**Before Hooks** run before the action executes. They can:
+- Modify the input data
+- Skip the action entirely (return early with custom data)
+- Return an error to stop execution
+
+**After Hooks** run after the action completes. They can:
+- Modify the result data
+- Return an error to override the response
+
+### Hook Context
+
+All hooks receive a `HookContext` object containing:
+- `session`: The current user session (or null if not authenticated)
+- Additional context properties can be added as needed
+
+### Available Hooks
+
+All actions support hooks:
+- `createFeature` - Before/after creating a feature
+- `updateFeature` - Before/after updating a feature
+- `deleteFeature` - Before/after deleting a feature
+- `listFeatures` - Before/after listing features
+- `toggleFeature` - Before/after toggling a feature
+- `setOrganizationFeature` - Before/after setting an organization feature
+- `removeOrganizationFeature` - Before/after removing an organization feature
+- `getOrganizationFeatures` - Before/after getting organization features
+- `getAvailableFeatures` - Before/after getting available features
+
+### Hook Return Types
+
+**Before Hook Result:**
+```typescript
+interface BeforeHookResult<T = unknown> {
+  data?: T;           // Modified input data (optional)
+  error?: {           // Error to return (optional)
+    message: string;
+    status?: number;
+  };
+  skip?: boolean;     // If true, skip the action and return data
+}
+```
+
+**After Hook Result:**
+```typescript
+interface AfterHookResult<T = unknown> {
+  data?: T;           // Modified result data (optional)
+  error?: {           // Error to return (optional)
+    message: string;
+    status?: number;
+  };
+}
+```
+
+### Usage Examples
+
+#### Basic Hook Example
+
+```typescript
+import { organizationFeaturesPlugin } from "@emplv/better-auth-organization-features";
+
+export const auth = betterAuth({
+  plugins: [
+    organizationFeaturesPlugin({
+      hooks: {
+        createFeature: {
+          before: async (input, context) => {
+            // Log the creation attempt
+            console.log("Creating feature:", input.name);
+            
+            // Modify the input
+            return {
+              data: {
+                ...input,
+                description: input.description || "No description provided",
+              },
+            };
+          },
+          after: async (result, input, context) => {
+            // Log successful creation
+            if (result.data) {
+              console.log("Feature created:", result.data.id);
+            }
+            
+            // Return empty object to use original result
+            return {};
+          },
+        },
+      },
+    }),
+  ],
+});
+```
+
+#### Skip Action Example
+
+```typescript
+organizationFeaturesPlugin({
+  hooks: {
+    deleteFeature: {
+      before: async (featureId, context) => {
+        // Prevent deletion of critical features
+        if (featureId === "critical-feature-id") {
+          return {
+            skip: true,
+            error: {
+              message: "Cannot delete critical features",
+              status: 403,
+            },
+          };
+        }
+        
+        // Allow deletion
+        return {};
+      },
+    },
+  },
+})
+```
+
+#### Modify Result Example
+
+```typescript
+organizationFeaturesPlugin({
+  hooks: {
+    getAvailableFeatures: {
+      after: async (result, context) => {
+        if (result.data) {
+          // Add additional metadata to features
+          const enhancedFeatures = result.data.map((feature) => ({
+            ...feature,
+            metadata: {
+              fetchedAt: new Date().toISOString(),
+            },
+          }));
+          
+          return {
+            data: enhancedFeatures,
+          };
+        }
+        
+        return {};
+      },
+    },
+  },
+})
+```
+
+#### Validation Example
+
+```typescript
+organizationFeaturesPlugin({
+  hooks: {
+    createFeature: {
+      before: async (input, context) => {
+        // Validate feature name format
+        if (!/^[a-z0-9-]+$/.test(input.name)) {
+          return {
+            skip: true,
+            error: {
+              message: "Feature name must be lowercase alphanumeric with hyphens",
+              status: 400,
+            },
+          };
+        }
+        
+        // Continue with modified input
+        return {
+          data: {
+            ...input,
+            name: input.name.toLowerCase(),
+          },
+        };
+      },
+    },
+  },
+})
+```
+
+#### Audit Logging Example
+
+```typescript
+organizationFeaturesPlugin({
+  hooks: {
+    setOrganizationFeature: {
+      after: async (result, organizationId, featureId, input, context) => {
+        if (result.data && context.session?.user) {
+          // Log the action to an audit system
+          await auditLog.create({
+            action: "setOrganizationFeature",
+            userId: context.session.user.id,
+            organizationId,
+            featureId,
+            enabled: input.enabled,
+            timestamp: new Date(),
+          });
+        }
+        
+        return {};
+      },
+    },
+  },
+})
+```
+
+### Hook Execution Flow
+
+1. **Before Hook** executes
+   - If `skip: true` is returned, the action is skipped and the hook's data/error is returned
+   - If `data` is returned, it replaces the original input
+   - If `error` is returned, execution stops and error is returned
+
+2. **Action** executes with modified input (if any)
+
+3. **After Hook** executes
+   - If `data` is returned, it replaces the action's result
+   - If `error` is returned, it overrides the result with an error
+
+### Notes
+
+- Hooks are **optional** - if not provided, actions execute normally
+- Hooks are **async** - they can perform async operations (database queries, API calls, etc.)
+- Hook errors take precedence - if a hook returns an error, it will be returned to the client
+- Hook data modifications are type-safe - TypeScript will enforce correct types
+
 ## Database Schema
 
 The plugin automatically creates two tables:

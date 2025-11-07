@@ -1,21 +1,25 @@
 import type { BetterAuthPlugin } from "better-auth";
 import { organizationFeaturesSchema } from "./schema";
 import {
-  createFeatureEndpoint,
-  listFeaturesEndpoint,
-  updateFeatureEndpoint,
-  deleteFeatureEndpoint,
-  toggleFeatureEndpoint,
+  createCreateFeatureEndpoint,
+  createListFeaturesEndpoint,
+  createUpdateFeatureEndpoint,
+  createDeleteFeatureEndpoint,
+  createToggleFeatureEndpoint,
 } from "./endpoints/features";
 import {
-  setOrganizationFeatureEndpoint,
-  removeOrganizationFeatureEndpoint,
-  getOrganizationFeaturesEndpoint,
-  getAvailableFeaturesEndpoint,
+  createSetOrganizationFeatureEndpoint,
+  createRemoveOrganizationFeatureEndpoint,
+  createGetOrganizationFeaturesEndpoint,
+  createGetAvailableFeaturesEndpoint,
 } from "./endpoints/organization-features";
+import type { OrganizationFeaturesHooks } from "./hooks";
 
 export interface OrganizationFeaturesPluginOptions {
-  // Future plugin options can be added here
+  /**
+   * Hooks for intercepting and modifying behavior of all actions
+   */
+  hooks?: OrganizationFeaturesHooks;
 }
 
 /**
@@ -33,19 +37,21 @@ export interface OrganizationFeaturesPluginOptions {
 export const organizationFeaturesPlugin = (
   options?: OrganizationFeaturesPluginOptions
 ): BetterAuthPlugin => {
+  const hooks = options?.hooks;
+
   return {
     id: "organization-features",
     schema: organizationFeaturesSchema,
     endpoints: {
-      createFeature: createFeatureEndpoint,
-      listFeatures: listFeaturesEndpoint,
-      updateFeature: updateFeatureEndpoint,
-      deleteFeature: deleteFeatureEndpoint,
-      toggleFeature: toggleFeatureEndpoint,
-      setOrganizationFeature: setOrganizationFeatureEndpoint,
-      removeOrganizationFeature: removeOrganizationFeatureEndpoint,
-      getOrganizationFeatures: getOrganizationFeaturesEndpoint,
-      getAvailableFeatures: getAvailableFeaturesEndpoint,
+      createFeature: createCreateFeatureEndpoint(hooks),
+      listFeatures: createListFeaturesEndpoint(hooks),
+      updateFeature: createUpdateFeatureEndpoint(hooks),
+      deleteFeature: createDeleteFeatureEndpoint(hooks),
+      toggleFeature: createToggleFeatureEndpoint(hooks),
+      setOrganizationFeature: createSetOrganizationFeatureEndpoint(hooks),
+      removeOrganizationFeature: createRemoveOrganizationFeatureEndpoint(hooks),
+      getOrganizationFeatures: createGetOrganizationFeaturesEndpoint(hooks),
+      getAvailableFeatures: createGetAvailableFeaturesEndpoint(hooks),
     },
   } satisfies BetterAuthPlugin;
 };

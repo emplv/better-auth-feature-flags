@@ -3,347 +3,540 @@ import type {
   CreateFeatureInput,
   UpdateFeatureInput,
 } from "../../shared/types";
+import type { OrganizationFeaturesHooks } from "../hooks";
+import { runBeforeHook, runAfterHook } from "../hook-helpers";
 
 /**
  * Admin-only endpoints for managing features
  */
 
-export const createFeatureEndpoint = createAuthEndpoint(
-  "/organization-features/features",
-  {
-    method: "POST",
-    use: [sessionMiddleware],
-  },
-  async (ctx) => {
-    const { adapter, session } = ctx.context;
-    const body = (await ctx.request?.json()) as CreateFeatureInput;
+export function createCreateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+  return createAuthEndpoint(
+    "/organization-features/features",
+    {
+      method: "POST",
+      use: [sessionMiddleware],
+    },
+    async (ctx) => {
+      const { adapter, session } = ctx.context;
+      const body = (await ctx.request?.json()) as CreateFeatureInput;
+      const hookContext = { session };
 
-    // Verify session has user
-    if (!session?.user) {
-      return ctx.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is admin (requires admin plugin)
-    // This will work if admin plugin is installed
-    // adapter.findOne
-    const user: Record<"role", string> | null = await adapter.findOne({
-      model: "user",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: session.user.id,
-        },
-      ],
-      select: ["role"],
-    });
-
-    if (!user || user.role !== "admin") {
-      return ctx.json(
-        { error: "Forbidden: Admin access required" },
-        { status: 403 }
+      // Run before hook
+      const beforeResult = await runBeforeHook(
+        hooks?.createFeature?.before as any,
+        body,
+        hookContext
       );
-    }
 
-    // Validate input
-    if (!body.name || !body.displayName) {
-      return ctx.json(
-        { error: "name and displayName are required" },
-        { status: 400 }
+      if (beforeResult.skip) {
+        if (beforeResult.error) {
+          return ctx.json(
+            { error: beforeResult.error.message },
+            { status: beforeResult.error.status || 400 }
+          );
+        }
+        return ctx.json({ data: beforeResult.data });
+      }
+
+      const inputData: CreateFeatureInput = (beforeResult.data as CreateFeatureInput | undefined) || body;
+
+      // Verify session has user
+      if (!session?.user) {
+        return ctx.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // Check if user is admin
+      const user: Record<"role", string> | null = await adapter.findOne({
+        model: "user",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: session.user.id,
+          },
+        ],
+        select: ["role"],
+      });
+
+      if (!user || user.role !== "admin") {
+        return ctx.json(
+          { error: "Forbidden: Admin access required" },
+          { status: 403 }
+        );
+      }
+
+      // Validate input
+      if (!inputData.name || !inputData.displayName) {
+        return ctx.json(
+          { error: "name and displayName are required" },
+          { status: 400 }
+        );
+      }
+
+      // Check if feature with same name already exists
+      const existing = await adapter.findOne({
+        model: "feature",
+        select: ["id"],
+        where: [
+          {
+            field: "name",
+            operator: "eq",
+            value: inputData.name,
+          },
+        ],
+      });
+
+      if (existing) {
+        return ctx.json(
+          { error: "Feature with this name already exists" },
+          { status: 409 }
+        );
+      }
+
+      // Create feature (enabled by default)
+      const feature = await adapter.create({
+        model: "feature",
+        data: {
+          name: inputData.name,
+          displayName: inputData.displayName,
+          description: inputData.description || null,
+          enabled: inputData.enabled ?? true,
+        },
+      });
+
+      const result = { data: feature, error: null };
+
+      // Run after hook
+      const afterResult = await runAfterHook(
+        hooks?.createFeature?.after as any,
+        result,
+        inputData,
+        hookContext
       );
+
+      if (afterResult.error) {
+        return ctx.json(
+          { error: afterResult.error.message },
+          { status: afterResult.error.status || 500 }
+        );
+      }
+
+      return ctx.json({ data: afterResult.data || feature });
     }
+  );
+}
 
-    // Check if feature with same name already exists
-    const existing = await adapter.findOne({
-      model: "feature",
-      select: ["id"],
-      where: [
-        {
-          field: "name",
-          operator: "eq",
-          value: body.name,
-        },
-      ],
-    });
+export function createListFeaturesEndpoint(hooks?: OrganizationFeaturesHooks) {
+  return createAuthEndpoint(
+    "/organization-features/features",
+    {
+      method: "GET",
+      use: [sessionMiddleware],
+    },
+    async (ctx) => {
+      const { adapter, session } = ctx.context;
+      const hookContext = { session };
 
-    if (existing) {
-      return ctx.json(
-        { error: "Feature with this name already exists" },
-        { status: 409 }
+      // Run before hook
+      const beforeResult = await runBeforeHook(
+        hooks?.listFeatures?.before as any,
+        hookContext
       );
-    }
 
-    // Create feature (enabled by default)
-    const feature = await adapter.create({
-      model: "feature",
-      data: {
-        name: body.name,
-        displayName: body.displayName,
-        description: body.description || null,
-        enabled: body.enabled ?? true,
-      },
-    });
+      if (beforeResult.skip) {
+        if (beforeResult.error) {
+          return ctx.json(
+            { error: beforeResult.error.message },
+            { status: beforeResult.error.status || 400 }
+          );
+        }
+        return ctx.json({ data: beforeResult.data || [] });
+      }
 
-    return ctx.json({ data: feature });
-  }
-);
+      // Verify admin access
+      if (!session?.user) {
+        return ctx.json({ error: "Unauthorized" }, { status: 401 });
+      }
 
-export const listFeaturesEndpoint = createAuthEndpoint(
-  "/organization-features/features",
-  {
-    method: "GET",
-    use: [sessionMiddleware],
-  },
-  async (ctx) => {
-    const { adapter, session } = ctx.context;
+      const user: Record<"role", string> | null = await adapter.findOne({
+        model: "user",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: session.user.id,
+          },
+        ],
+        select: ["role"],
+      });
 
-    // Verify admin access
-    if (!session?.user) {
-      return ctx.json({ error: "Unauthorized" }, { status: 401 });
-    }
+      if (!user || user.role !== "admin") {
+        return ctx.json(
+          { error: "Forbidden: Admin access required" },
+          { status: 403 }
+        );
+      }
 
-    const user: Record<"role", string> | null = await adapter.findOne({
-      model: "user",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: session.user.id,
+      const features = await adapter.findMany({
+        model: "feature",
+        sortBy: {
+          field: "createdAt",
+          direction: "desc",
         },
-      ],
-      select: ["role"],
-    });
+      });
 
-    if (!user || user.role !== "admin") {
-      return ctx.json(
-        { error: "Forbidden: Admin access required" },
-        { status: 403 }
+      const result = { data: features, error: null };
+
+      // Run after hook
+      const afterResult = await runAfterHook(
+        hooks?.listFeatures?.after as any,
+        result,
+        hookContext
       );
+
+      if (afterResult.error) {
+        return ctx.json(
+          { error: afterResult.error.message },
+          { status: afterResult.error.status || 500 }
+        );
+      }
+
+      return ctx.json({ data: afterResult.data || features });
     }
+  );
+}
 
-    const features = await adapter.findMany({
-      model: "feature",
-      sortBy: {
-        field: "createdAt",
-        direction: "desc",
-      },
-    });
+export function createUpdateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+  return createAuthEndpoint(
+    "/organization-features/features/:id",
+    {
+      method: "PUT",
+      use: [sessionMiddleware],
+    },
+    async (ctx) => {
+      const { adapter, session } = ctx.context;
+      const featureId = ctx.params.id;
+      const body = (await ctx.request?.json()) as UpdateFeatureInput;
+      const hookContext = { session };
 
-    return ctx.json({ data: features });
-  }
-);
-
-export const updateFeatureEndpoint = createAuthEndpoint(
-  "/organization-features/features/:id",
-  {
-    method: "PUT",
-    use: [sessionMiddleware],
-  },
-  async (ctx) => {
-    const { adapter, session } = ctx.context;
-    const featureId = ctx.params.id;
-    const body = (await ctx.request?.json()) as UpdateFeatureInput;
-
-    // Verify admin access
-    if (!session?.user) {
-      return ctx.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user: Record<"role", string> | null = await adapter.findOne({
-      model: "user",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: session.user.id,
-        },
-      ],
-      select: ["role"],
-    });
-
-    if (!user || user.role !== "admin") {
-      return ctx.json(
-        { error: "Forbidden: Admin access required" },
-        { status: 403 }
+      // Run before hook
+      const beforeResult = await runBeforeHook(
+        hooks?.updateFeature?.before as any,
+        featureId,
+        body,
+        hookContext
       );
-    }
 
-    // Check if feature exists
-    const existing = await adapter.findOne({
-      model: "feature",
-      select: ["id"],
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: featureId,
+      if (beforeResult.skip) {
+        if (beforeResult.error) {
+          return ctx.json(
+            { error: beforeResult.error.message },
+            { status: beforeResult.error.status || 400 }
+          );
+        }
+        return ctx.json({ data: beforeResult.data });
+      }
+
+      const inputData: UpdateFeatureInput = (beforeResult.data as UpdateFeatureInput | undefined) || body;
+
+      // Verify admin access
+      if (!session?.user) {
+        return ctx.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const user: Record<"role", string> | null = await adapter.findOne({
+        model: "user",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: session.user.id,
+          },
+        ],
+        select: ["role"],
+      });
+
+      if (!user || user.role !== "admin") {
+        return ctx.json(
+          { error: "Forbidden: Admin access required" },
+          { status: 403 }
+        );
+      }
+
+      // Check if feature exists
+      const existing = await adapter.findOne({
+        model: "feature",
+        select: ["id"],
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: featureId,
+          },
+        ],
+      });
+
+      if (!existing) {
+        return ctx.json({ error: "Feature not found" }, { status: 404 });
+      }
+
+      // Update feature
+      const feature = await adapter.update({
+        model: "feature",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: featureId,
+          },
+        ],
+        update: {
+          ...(inputData.displayName !== undefined && {
+            displayName: inputData.displayName,
+          }),
+          ...(inputData.description !== undefined && {
+            description: inputData.description,
+          }),
+          ...(inputData.enabled !== undefined && { enabled: inputData.enabled }),
         },
-      ],
-    });
+      });
 
-    if (!existing) {
-      return ctx.json({ error: "Feature not found" }, { status: 404 });
-    }
+      const result = { data: feature, error: null };
 
-    // Update feature
-    const feature = await adapter.update({
-      model: "feature",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: featureId,
-        },
-      ],
-      update: {
-        ...(body.displayName !== undefined && {
-          displayName: body.displayName,
-        }),
-        ...(body.description !== undefined && {
-          description: body.description,
-        }),
-        ...(body.enabled !== undefined && { enabled: body.enabled }),
-      },
-    });
-
-    return ctx.json({ data: feature });
-  }
-);
-
-export const deleteFeatureEndpoint = createAuthEndpoint(
-  "/organization-features/features/:id",
-  {
-    method: "DELETE",
-    use: [sessionMiddleware],
-  },
-  async (ctx) => {
-    const { adapter, session } = ctx.context;
-    const featureId = ctx.params.id;
-
-    // Verify admin access
-    if (!session?.user) {
-      return ctx.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user: Record<"role", string> | null = await adapter.findOne({
-      model: "user",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: session.user.id,
-        },
-      ],
-      select: ["role"],
-    });
-
-    if (!user || user.role !== "admin") {
-      return ctx.json(
-        { error: "Forbidden: Admin access required" },
-        { status: 403 }
+      // Run after hook
+      const afterResult = await runAfterHook(
+        hooks?.updateFeature?.after as any,
+        result,
+        featureId,
+        inputData,
+        hookContext
       );
+
+      if (afterResult.error) {
+        return ctx.json(
+          { error: afterResult.error.message },
+          { status: afterResult.error.status || 500 }
+        );
+      }
+
+      return ctx.json({ data: afterResult.data || feature });
     }
+  );
+}
 
-    // Check if feature exists
-    const existing = await adapter.findOne({
-      model: "feature",
-      select: ["id"],
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: featureId,
-        },
-      ],
-    });
+export function createDeleteFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+  return createAuthEndpoint(
+    "/organization-features/features/:id",
+    {
+      method: "DELETE",
+      use: [sessionMiddleware],
+    },
+    async (ctx) => {
+      const { adapter, session } = ctx.context;
+      const featureId = ctx.params.id;
+      const hookContext = { session };
 
-    if (!existing) {
-      return ctx.json({ error: "Feature not found" }, { status: 404 });
-    }
-
-    // Delete feature (cascade will remove organizationFeatures)
-    await adapter.delete({
-      model: "feature",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: featureId,
-        },
-      ],
-    });
-
-    return ctx.json({ data: { success: true } });
-  }
-);
-
-export const toggleFeatureEndpoint = createAuthEndpoint(
-  "/organization-features/features/:id/toggle",
-  {
-    method: "POST",
-    use: [sessionMiddleware],
-  },
-  async (ctx) => {
-    const { adapter, session } = ctx.context;
-    const featureId = ctx.params.id;
-    const body = (await ctx.request?.json()) as { enabled: boolean };
-
-    // Verify admin access
-    if (!session?.user) {
-      return ctx.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user: Record<"role", string> | null = await adapter.findOne({
-      model: "user",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: session.user.id,
-        },
-      ],
-      select: ["role"],
-    });
-
-    if (!user || user.role !== "admin") {
-      return ctx.json(
-        { error: "Forbidden: Admin access required" },
-        { status: 403 }
+      // Run before hook
+      const beforeResult = await runBeforeHook(
+        hooks?.deleteFeature?.before as any,
+        featureId,
+        hookContext
       );
+
+      if (beforeResult.skip) {
+        if (beforeResult.error) {
+          return ctx.json(
+            { error: beforeResult.error.message },
+            { status: beforeResult.error.status || 400 }
+          );
+        }
+        return ctx.json({ data: { success: true } });
+      }
+
+      // Verify admin access
+      if (!session?.user) {
+        return ctx.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const user: Record<"role", string> | null = await adapter.findOne({
+        model: "user",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: session.user.id,
+          },
+        ],
+        select: ["role"],
+      });
+
+      if (!user || user.role !== "admin") {
+        return ctx.json(
+          { error: "Forbidden: Admin access required" },
+          { status: 403 }
+        );
+      }
+
+      // Check if feature exists
+      const existing = await adapter.findOne({
+        model: "feature",
+        select: ["id"],
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: featureId,
+          },
+        ],
+      });
+
+      if (!existing) {
+        return ctx.json({ error: "Feature not found" }, { status: 404 });
+      }
+
+      // Delete feature (cascade will remove organizationFeatures)
+      await adapter.delete({
+        model: "feature",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: featureId,
+          },
+        ],
+      });
+
+      const result = { data: { success: true }, error: null };
+
+      // Run after hook
+      const afterResult = await runAfterHook(
+        hooks?.deleteFeature?.after as any,
+        result,
+        featureId,
+        hookContext
+      );
+
+      if (afterResult.error) {
+        return ctx.json(
+          { error: afterResult.error.message },
+          { status: afterResult.error.status || 500 }
+        );
+      }
+
+      return ctx.json({ data: afterResult.data || { success: true } });
     }
+  );
+}
 
-    // Check if feature exists
-    const existing = await adapter.findOne({
-      model: "feature",
-      select: ["id"],
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: featureId,
+export function createToggleFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+  return createAuthEndpoint(
+    "/organization-features/features/:id/toggle",
+    {
+      method: "POST",
+      use: [sessionMiddleware],
+    },
+    async (ctx) => {
+      const { adapter, session } = ctx.context;
+      const featureId = ctx.params.id;
+      const body = (await ctx.request?.json()) as { enabled: boolean };
+      const hookContext = { session };
+
+      // Run before hook
+      const beforeResult = await runBeforeHook(
+        hooks?.toggleFeature?.before as any,
+        featureId,
+        body.enabled,
+        hookContext
+      );
+
+      if (beforeResult.skip) {
+        if (beforeResult.error) {
+          return ctx.json(
+            { error: beforeResult.error.message },
+            { status: beforeResult.error.status || 400 }
+          );
+        }
+        return ctx.json({ data: beforeResult.data });
+      }
+
+      const enabled = beforeResult.data !== undefined ? beforeResult.data : body.enabled;
+
+      // Verify admin access
+      if (!session?.user) {
+        return ctx.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const user: Record<"role", string> | null = await adapter.findOne({
+        model: "user",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: session.user.id,
+          },
+        ],
+        select: ["role"],
+      });
+
+      if (!user || user.role !== "admin") {
+        return ctx.json(
+          { error: "Forbidden: Admin access required" },
+          { status: 403 }
+        );
+      }
+
+      // Check if feature exists
+      const existing = await adapter.findOne({
+        model: "feature",
+        select: ["id"],
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: featureId,
+          },
+        ],
+      });
+
+      if (!existing) {
+        return ctx.json({ error: "Feature not found" }, { status: 404 });
+      }
+
+      // Toggle feature enabled state
+      const feature = await adapter.update({
+        model: "feature",
+        where: [
+          {
+            field: "id",
+            operator: "eq",
+            value: featureId,
+          },
+        ],
+        update: {
+          enabled,
         },
-      ],
-    });
+      });
 
-    if (!existing) {
-      return ctx.json({ error: "Feature not found" }, { status: 404 });
+      const result = { data: feature, error: null };
+
+      // Run after hook
+      const afterResult = await runAfterHook(
+        hooks?.toggleFeature?.after as any,
+        result,
+        featureId,
+        enabled,
+        hookContext
+      );
+
+      if (afterResult.error) {
+        return ctx.json(
+          { error: afterResult.error.message },
+          { status: afterResult.error.status || 500 }
+        );
+      }
+
+      return ctx.json({ data: afterResult.data || feature });
     }
-
-    // Toggle feature enabled state
-    const feature = await adapter.update({
-      model: "feature",
-      where: [
-        {
-          field: "id",
-          operator: "eq",
-          value: featureId,
-        },
-      ],
-      update: {
-        enabled: body.enabled,
-      },
-    });
-
-    return ctx.json({ data: feature });
-  }
-);
+  );
+}
