@@ -3,14 +3,14 @@ import type {
   CreateFeatureInput,
   UpdateFeatureInput,
 } from "../../shared/types";
-import type { OrganizationFeaturesHooks } from "../hooks";
+import type { FeatureFlagsHooks } from "../hooks";
 import { runBeforeHook, runAfterHook } from "../hook-helpers";
 
 /**
  * Admin-only endpoints for managing features
  */
 
-export function createCreateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+export function createCreateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
   return createAuthEndpoint(
     "/organization-features/features",
     {
@@ -127,7 +127,7 @@ export function createCreateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
   );
 }
 
-export function createListFeaturesEndpoint(hooks?: OrganizationFeaturesHooks) {
+export function createListFeaturesEndpoint(hooks?: FeatureFlagsHooks) {
   return createAuthEndpoint(
     "/organization-features/features",
     {
@@ -207,7 +207,7 @@ export function createListFeaturesEndpoint(hooks?: OrganizationFeaturesHooks) {
   );
 }
 
-export function createUpdateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+export function createUpdateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
   return createAuthEndpoint(
     "/organization-features/features/:id",
     {
@@ -325,7 +325,7 @@ export function createUpdateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
   );
 }
 
-export function createDeleteFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+export function createDeleteFeatureEndpoint(hooks?: FeatureFlagsHooks) {
   return createAuthEndpoint(
     "/organization-features/features/:id",
     {
@@ -395,7 +395,7 @@ export function createDeleteFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
         return ctx.json({ error: "Feature not found" }, { status: 404 });
       }
 
-      // Delete feature (cascade will remove organizationFeatures)
+      // Delete feature (cascade will remove feature flags)
       await adapter.delete({
         model: "feature",
         where: [
@@ -429,7 +429,7 @@ export function createDeleteFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
   );
 }
 
-export function createToggleFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
+export function createToggleFeatureEndpoint(hooks?: FeatureFlagsHooks) {
   return createAuthEndpoint(
     "/organization-features/features/:id/toggle",
     {

@@ -1,5 +1,5 @@
 import type { BetterAuthPlugin } from "better-auth";
-import { organizationFeaturesSchema } from "./schema";
+import { featureFlagsSchema } from "./schema";
 import {
   createCreateFeatureEndpoint,
   createListFeaturesEndpoint,
@@ -8,18 +8,18 @@ import {
   createToggleFeatureEndpoint,
 } from "./endpoints/features";
 import {
-  createSetOrganizationFeatureEndpoint,
-  createRemoveOrganizationFeatureEndpoint,
-  createGetOrganizationFeaturesEndpoint,
+  createSetFeatureFlagEndpoint,
+  createRemoveFeatureFlagEndpoint,
+  createGetFeatureFlagsEndpoint,
   createGetAvailableFeaturesEndpoint,
-} from "./endpoints/organization-features";
-import type { OrganizationFeaturesHooks } from "./hooks";
+} from "./endpoints/feature-flags";
+import type { FeatureFlagsHooks } from "./hooks";
 
-export interface OrganizationFeaturesPluginOptions {
+export interface FeatureFlagsPluginOptions {
   /**
    * Hooks for intercepting and modifying behavior of all actions
    */
-  hooks?: OrganizationFeaturesHooks;
+  hooks?: FeatureFlagsHooks;
 }
 
 /**
@@ -32,25 +32,25 @@ export interface OrganizationFeaturesPluginOptions {
  *
  * Features are only available to organizations when:
  * - The feature is globally available (features.active = true)
- * - AND the organization has the feature explicitly enabled (organizationFeatures.enabled = true)
+ * - AND the organization has the feature explicitly enabled (featureFlags.enabled = true)
  */
-export const organizationFeaturesPlugin = (
-  options?: OrganizationFeaturesPluginOptions
+export const featureFlagsPlugin = (
+  options?: FeatureFlagsPluginOptions
 ): BetterAuthPlugin => {
   const hooks = options?.hooks;
 
   return {
     id: "organization-features",
-    schema: organizationFeaturesSchema,
+    schema: featureFlagsSchema,
     endpoints: {
       createFeature: createCreateFeatureEndpoint(hooks),
       listFeatures: createListFeaturesEndpoint(hooks),
       updateFeature: createUpdateFeatureEndpoint(hooks),
       deleteFeature: createDeleteFeatureEndpoint(hooks),
       toggleFeature: createToggleFeatureEndpoint(hooks),
-      setOrganizationFeature: createSetOrganizationFeatureEndpoint(hooks),
-      removeOrganizationFeature: createRemoveOrganizationFeatureEndpoint(hooks),
-      getOrganizationFeatures: createGetOrganizationFeaturesEndpoint(hooks),
+      setFeatureFlag: createSetFeatureFlagEndpoint(hooks),
+      removeFeatureFlag: createRemoveFeatureFlagEndpoint(hooks),
+      getFeatureFlags: createGetFeatureFlagsEndpoint(hooks),
       getAvailableFeatures: createGetAvailableFeaturesEndpoint(hooks),
     },
   } satisfies BetterAuthPlugin;

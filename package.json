@@ -1,7 +1,7 @@
 {
   "name": "@emplv/better-auth-organization-features",
   "version": "0.1.0",
-  "description": "Better Auth plugin for managing organization feature flags",
+  "description": "Better Auth plugin for managing feature flags",
   "main": "./dist/server/index.js",
   "types": "./dist/server/index.d.ts",
   "exports": {
@@ -24,7 +24,6 @@
   "keywords": [
     "better-auth",
     "plugin",
-    "organization",
     "features",
     "feature-flags"
   ],

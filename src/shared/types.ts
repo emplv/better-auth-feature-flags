@@ -1,5 +1,5 @@
 /**
- * Shared types for the organization features plugin
+ * Shared types for the features plugin
  */
 
 export interface Feature {
@@ -12,7 +12,7 @@ export interface Feature {
   updatedAt: Date;
 }
 
-export interface OrganizationFeature {
+export interface FeatureFlag {
   id: string;
   organizationId: string;
   featureId: string;
@@ -34,11 +34,11 @@ export interface UpdateFeatureInput {
   active?: boolean;
 }
 
-export interface SetOrganizationFeatureInput {
+export interface SetFeatureFlagInput {
   enabled: boolean;
 }
 
-export interface OrganizationFeatureWithDetails extends OrganizationFeature {
+export interface FeatureFlagWithDetails extends FeatureFlag {
   feature: Feature;
 }
 

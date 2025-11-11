@@ -1,15 +1,15 @@
 import type { BetterAuthClientPlugin } from "better-auth/client";
 import type { BetterFetchOption } from "@better-fetch/fetch";
-import type { organizationFeaturesPlugin } from "../server/plugin";
+import type { featureFlagsPlugin } from "../server/plugin";
 import type {
   CreateFeatureInput,
   UpdateFeatureInput,
-  SetOrganizationFeatureInput,
+  SetFeatureFlagInput,
   Feature,
-  OrganizationFeatureWithDetails,
+  FeatureFlagWithDetails,
 } from "./types";
 
-export interface OrganizationFeaturesClientActions {
+export interface FeatureFlagsClientActions {
   /**
    * Create a new feature (admin only)
    */
@@ -56,22 +56,22 @@ export interface OrganizationFeaturesClientActions {
   ) => Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
 
   /**
-   * Enable or disable a feature for a specific organization (admin only)
+   * Enable or disable a feature flag for a specific organization (admin only)
    */
-  setOrganizationFeature: (
+  setFeatureFlag: (
     organizationId: string,
     featureId: string,
-    data: SetOrganizationFeatureInput,
+    data: SetFeatureFlagInput,
     fetchOptions?: BetterFetchOption
   ) => Promise<
-    | { data: OrganizationFeatureWithDetails; error: null }
+    | { data: FeatureFlagWithDetails; error: null }
     | { data: null; error: unknown }
   >;
 
   /**
-   * Remove a feature from an organization (admin only)
+   * Remove a feature flag from an organization (admin only)
    */
-  removeOrganizationFeature: (
+  removeFeatureFlag: (
     organizationId: string,
     featureId: string,
     fetchOptions?: BetterFetchOption
@@ -80,32 +80,32 @@ export interface OrganizationFeaturesClientActions {
   >;
 
   /**
-   * Get all enabled features for a specific organization (members only)
+   * Get all enabled feature flags for a specific organization (members only)
    */
-  getOrganizationFeatures: (
+  getFeatureFlags: (
     organizationId: string,
     fetchOptions?: BetterFetchOption
   ) => Promise<
-    | { data: OrganizationFeatureWithDetails[]; error: null }
+    | { data: FeatureFlagWithDetails[]; error: null }
     | { data: null; error: unknown }
   >;
 
   /**
-   * Get all enabled features for the current user's active organization
+   * Get all enabled feature flags for the current user's active organization
    */
   getAvailableFeatures: (
     fetchOptions?: BetterFetchOption
   ) => Promise<
-    | { data: OrganizationFeatureWithDetails[]; error: null }
+    | { data: FeatureFlagWithDetails[]; error: null }
     | { data: null; error: unknown }
   >;
 }
 
-export const organizationFeaturesClientPlugin = {
+export const featureFlagsClientPlugin = {
   id: "organization-features",
-  $InferServerPlugin: {} as ReturnType<typeof organizationFeaturesPlugin>,
+  $InferServerPlugin: {} as ReturnType<typeof featureFlagsPlugin>,
   getActions: ($fetch) => {
-    const actions: OrganizationFeaturesClientActions = {
+    const actions: FeatureFlagsClientActions = {
       createFeature: async (data, fetchOptions) => {
         const res = (await $fetch("/organization-features/features", {
           method: "POST",
@@ -162,7 +162,7 @@ export const organizationFeaturesClientPlugin = {
         return res;
       },
 
-      setOrganizationFeature: async (
+      setFeatureFlag: async (
         organizationId,
         featureId,
         data,
@@ -176,12 +176,12 @@ export const organizationFeaturesClientPlugin = {
             ...fetchOptions,
           }
         )) as
-          | { data: OrganizationFeatureWithDetails; error: null }
+          | { data: FeatureFlagWithDetails; error: null }
           | { data: null; error: unknown };
         return res;
       },
 
-      removeOrganizationFeature: async (
+      removeFeatureFlag: async (
         organizationId,
         featureId,
         fetchOptions
@@ -198,7 +198,7 @@ export const organizationFeaturesClientPlugin = {
         return res;
       },
 
-      getOrganizationFeatures: async (organizationId, fetchOptions) => {
+      getFeatureFlags: async (organizationId, fetchOptions) => {
         const res = (await $fetch(
           `/organization-features/organizations/${organizationId}/features`,
           {
@@ -206,7 +206,7 @@ export const organizationFeaturesClientPlugin = {
             ...fetchOptions,
           }
         )) as
-          | { data: OrganizationFeatureWithDetails[]; error: null }
+          | { data: FeatureFlagWithDetails[]; error: null }
           | { data: null; error: unknown };
         return res;
       },
@@ -216,7 +216,7 @@ export const organizationFeaturesClientPlugin = {
           method: "GET",
           ...fetchOptions,
         })) as
-          | { data: OrganizationFeatureWithDetails[]; error: null }
+          | { data: FeatureFlagWithDetails[]; error: null }
           | { data: null; error: unknown };
 
         return res;

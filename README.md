@@ -1,12 +1,12 @@
 # @emplv/better-auth-organization-features
 
-A Better Auth plugin for managing organization feature flags. This plugin allows administrators to create, manage, and enable/disable features for organizations, while providing an easy way for users to check feature availability based on their active organization.
+A Better Auth plugin for managing feature flags for users and organizations. This plugin allows administrators to create, manage, and activate/deactivate features for users and organizations, while providing an easy way for users to check feature availability based on their active organization.
 
 ## Features
 
-- **Feature Management**: Create, update, and delete features globally
-- **Organization-Specific Features**: Enable/disable features per organization
-- **Feature Flag Logic**: Features are only enabled when both globally enabled AND explicitly enabled for the organization
+- **Feature Management**: Create, update, delete, activate and deactivate features globally
+- **User/Organization-Specific Features**: Enable/disable features per user/organization
+- **Feature Flag Logic**: Features are only enabled when both globally active AND explicitly enabled for the organization
 - **TypeScript Support**: Full TypeScript support with comprehensive types
 
 ## Installation
@@ -29,12 +29,12 @@ Add the plugin to your Better Auth configuration:
 
 ```typescript
 import { betterAuth } from "better-auth";
-import { organizationFeaturesPlugin } from "@emplv/better-auth-organization-features";
+import { featureFlagsPlugin } from "@emplv/better-auth-organization-features";
 
 export const auth = betterAuth({
   plugins: [
     // ... other plugins
-    organizationFeaturesPlugin(),
+    featureFlagsPlugin(),
   ],
 });
 ```
@@ -45,12 +45,12 @@ Add the client plugin to your auth client:
 
 ```typescript
 import { createAuthClient } from "better-auth/client";
-import { organizationFeaturesClientPlugin } from "@emplv/better-auth-organization-features/client";
+import { featureFlagsClientPlugin } from "@emplv/better-auth-organization-features/client";
 
 const authClient = createAuthClient({
   plugins: [
     // ... other plugins
-    organizationFeaturesClientPlugin,
+    featureFlagsClientPlugin,
   ],
 });
 ```
@@ -84,9 +84,9 @@ All actions support hooks:
 - `deleteFeature` - Before/after deleting a feature
 - `listFeatures` - Before/after listing features
 - `toggleFeature` - Before/after toggling a feature
-- `setOrganizationFeature` - Before/after setting an organization feature
-- `removeOrganizationFeature` - Before/after removing an organization feature
-- `getOrganizationFeatures` - Before/after getting organization features
+- `setFeatureFlag` - Before/after setting a feature flag
+- `removeFeatureFlag` - Before/after removing a feature flag
+- `getFeatureFlags` - Before/after getting feature flags
 - `getAvailableFeatures` - Before/after getting available features
 
 ### Hook Return Types
@@ -119,11 +119,11 @@ interface AfterHookResult<T = unknown> {
 #### Basic Hook Example
 
 ```typescript
-import { organizationFeaturesPlugin } from "@emplv/better-auth-organization-features";
+import { featureFlagsPlugin } from "@emplv/better-auth-organization-features";
 
 export const auth = betterAuth({
   plugins: [
-    organizationFeaturesPlugin({
+    featureFlagsPlugin({
       hooks: {
         createFeature: {
           before: async (input, context) => {
@@ -157,7 +157,7 @@ export const auth = betterAuth({
 #### Skip Action Example
 
 ```typescript
-organizationFeaturesPlugin({
+featureFlagsPlugin({
   hooks: {
     deleteFeature: {
       before: async (featureId, context) => {
@@ -183,7 +183,7 @@ organizationFeaturesPlugin({
 #### Modify Result Example
 
 ```typescript
-organizationFeaturesPlugin({
+featureFlagsPlugin({
   hooks: {
     getAvailableFeatures: {
       after: async (result, context) => {
@@ -211,7 +211,7 @@ organizationFeaturesPlugin({
 #### Validation Example
 
 ```typescript
-organizationFeaturesPlugin({
+featureFlagsPlugin({
   hooks: {
     createFeature: {
       before: async (input, context) => {
@@ -242,14 +242,14 @@ organizationFeaturesPlugin({
 #### Audit Logging Example
 
 ```typescript
-organizationFeaturesPlugin({
+featureFlagsPlugin({
   hooks: {
-    setOrganizationFeature: {
+        setFeatureFlag: {
       after: async (result, organizationId, featureId, input, context) => {
         if (result.data && context.session?.user) {
           // Log the action to an audit system
           await auditLog.create({
-            action: "setOrganizationFeature",
+            action: "setFeatureFlag",
             userId: context.session.user.id,
             organizationId,
             featureId,
@@ -295,11 +295,11 @@ The plugin automatically creates two tables:
 - `name` (string, unique) - Feature identifier (e.g., "advanced-analytics")
 - `displayName` (string) - Human-readable name
 - `description` (string, nullable)
-- `enabled` (boolean) - Global toggle
+- `active` (boolean) - Global toggle
 - `createdAt` (date)
 - `updatedAt` (date)
 
-### `organizationFeatures` Table
+### `featureFlags` Table
 
 - `id` (string, primary key)
 - `organizationId` (string, foreign key) - References `organization.id`
@@ -332,7 +332,7 @@ POST /api/auth/organization-features/features
   name: string;              // Unique feature identifier
   displayName: string;       // Human-readable name
   description?: string;      // Optional description
-  enabled?: boolean;         // Defaults to true
+  active?: boolean;         // Defaults to true
 }
 ```
 
@@ -350,7 +350,7 @@ const { data, error } = await authClient.organizationFeatures.createFeature({
   name: "advanced-analytics",
   displayName: "Advanced Analytics",
   description: "Enable advanced analytics dashboard",
-  enabled: true,
+  active: true,
 });
 ```
 
@@ -365,7 +365,7 @@ PUT /api/auth/organization-features/features/:id
 {
   displayName?: string;
   description?: string;
-  enabled?: boolean;
+  active?: boolean;
 }
 ```
 
@@ -383,7 +383,7 @@ const { data, error } = await authClient.organizationFeatures.updateFeature(
   "feature-id",
   {
     displayName: "Updated Name",
-    enabled: false,
+    active: false,
   }
 );
 ```
@@ -439,7 +439,7 @@ POST /api/auth/organization-features/features/:id/toggle
 **Request Body:**
 ```typescript
 {
-  enabled: boolean;
+  active: boolean;
 }
 ```
 
@@ -477,21 +477,21 @@ POST /api/auth/organization-features/organizations/:organizationId/features/:fea
 **Response:**
 ```typescript
 {
-  data: OrganizationFeature;
+  data: FeatureFlag;
   error: null;
 }
 ```
 
 **Example:**
 ```typescript
-const { data, error } = await authClient.organizationFeatures.setOrganizationFeature(
+const { data, error } = await authClient.organizationFeatures.setFeatureFlag(
   "org-id",
   "feature-id",
   { enabled: true }
 );
 ```
 
-**Note**: The feature must be globally enabled (`features.enabled = true`) before it can be enabled for an organization.
+**Note**: The feature must be globally active (`features.active = true`) before it can be enabled for an organization.
 
 ##### Remove Organization Feature
 
@@ -511,7 +511,7 @@ DELETE /api/auth/organization-features/organizations/:organizationId/features/:f
 
 **Example:**
 ```typescript
-const { data, error } = await authClient.organizationFeatures.removeOrganizationFeature(
+const { data, error } = await authClient.organizationFeatures.removeFeatureFlag(
   "org-id",
   "feature-id"
 );
@@ -530,21 +530,21 @@ GET /api/auth/organization-features/organizations/:organizationId/features
 **Response:**
 ```typescript
 {
-  data: OrganizationFeatureWithDetails[];
+  data: FeatureFlagWithDetails[];
   error: null;
 }
 ```
 
 **Example:**
 ```typescript
-const { data, error } = await authClient.organizationFeatures.getOrganizationFeatures(
+const { data, error } = await authClient.organizationFeatures.getFeatureFlags(
   "org-id"
 );
 ```
 
 ##### Get Available Features
 
-Get all enabled features for the current user's active organization.
+Get all active features for the current user's active organization.
 
 ```http
 GET /api/auth/organization-features/features/available
@@ -553,7 +553,7 @@ GET /api/auth/organization-features/features/available
 **Response:**
 ```typescript
 {
-  data: OrganizationFeatureWithDetails[];
+  data: FeatureFlagWithDetails[];
   error: null;
 }
 ```
@@ -581,17 +581,17 @@ listFeatures(): Promise<{ data: Feature[]; error: null } | { data: null; error: 
 deleteFeature(featureId: string): Promise<{ data: { success: boolean }; error: null } | { data: null; error: unknown }>;
 
 // Toggle feature global state
-toggleFeature(featureId: string, enabled: boolean): Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
+toggleFeature(featureId: string, active: boolean): Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
 
 // Enable/disable feature for organization
-setOrganizationFeature(
+setFeatureFlag(
   organizationId: string,
   featureId: string,
-  data: SetOrganizationFeatureInput
-): Promise<{ data: OrganizationFeatureWithDetails; error: null } | { data: null; error: unknown }>;
+  data: SetFeatureFlagInput
+): Promise<{ data: FeatureFlagWithDetails; error: null } | { data: null; error: unknown }>;
 
 // Remove feature from organization
-removeOrganizationFeature(
+removeFeatureFlag(
   organizationId: string,
   featureId: string
 ): Promise<{ data: { success: boolean }; error: null } | { data: null; error: unknown }>;
@@ -601,20 +601,20 @@ removeOrganizationFeature(
 
 ```typescript
 // Get features for specific organization
-getOrganizationFeatures(organizationId: string): Promise<{ data: OrganizationFeatureWithDetails[]; error: null } | { data: null; error: unknown }>;
+getFeatureFlags(organizationId: string): Promise<{ data: FeatureFlagWithDetails[]; error: null } | { data: null; error: unknown }>;
 
 // Get available features for current active organization
-getAvailableFeatures(): Promise<{ data: OrganizationFeatureWithDetails[]; error: null } | { data: null; error: unknown }>;
+getAvailableFeatures(): Promise<{ data: FeatureFlagWithDetails[]; error: null } | { data: null; error: unknown }>;
 ```
 
 ## Feature Flag Logic
 
 A feature is enabled for an organization when **both** conditions are met:
 
-1. **Global Feature Enabled**: `features.enabled = true`
-2. **Organization Feature Enabled**: `organizationFeatures.enabled = true` (exists in `organizationFeatures` table)
+1. **Global Feature Active**: `features.active = true`
+2. **Feature Flag Enabled**: `featureFlags.enabled = true` (exists in `featureFlags` table)
 
-If `features.enabled = false`, the feature is disabled for **all** organizations, regardless of organization-specific settings.
+If `features.active = false`, the feature is disabled for **all** organizations, regardless of organization-specific settings.
 
 ## Usage Examples
 
@@ -623,10 +623,10 @@ If `features.enabled = false`, the feature is disabled for **all** organizations
 ```tsx
 import { useEffect } from "react";
 import { createAuthClient } from "better-auth/client";
-import { organizationFeaturesClientPlugin, useFeatureFlag } from "@emplv/better-auth-organization-features/client";
+import { featureFlagsClientPlugin, useFeatureFlag } from "@emplv/better-auth-organization-features/client";
 
 const authClient = createAuthClient({
-  plugins: [organizationFeaturesClientPlugin],
+  plugins: [featureFlagsClientPlugin],
 });
 
 function App() {
@@ -662,10 +662,10 @@ async function createAndEnableFeature() {
   if (!feature) return;
 
   // Enable it for an organization
-  await authClient.organizationFeatures.setOrganizationFeature(
+  await authClient.organizationFeatures.setFeatureFlag(
     "org-id",
     feature.id,
-    { enabled: true }
+    { active: true }
   );
 }
 ```
@@ -678,12 +678,12 @@ interface Feature {
   name: string;
   displayName: string;
   description: string | null;
-  enabled: boolean;
+  active: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface OrganizationFeature {
+interface FeatureFlag {
   id: string;
   organizationId: string;
   featureId: string;
@@ -692,7 +692,7 @@ interface OrganizationFeature {
   updatedAt: Date;
 }
 
-interface OrganizationFeatureWithDetails extends OrganizationFeature {
+interface FeatureFlagWithDetails extends FeatureFlag {
   feature: Feature;
 }
 
@@ -700,16 +700,16 @@ interface CreateFeatureInput {
   name: string;
   displayName: string;
   description?: string;
-  enabled?: boolean;
+  active?: boolean;
 }
 
 interface UpdateFeatureInput {
   displayName?: string;
   description?: string;
-  enabled?: boolean;
+  active?: boolean;
 }
 
-interface SetOrganizationFeatureInput {
+interface SetFeatureFlagInput {
   enabled: boolean;
 }
 ```

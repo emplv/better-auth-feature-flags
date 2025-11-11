@@ -1,19 +1,19 @@
-export { organizationFeaturesPlugin } from "./plugin";
+export { featureFlagsPlugin } from "./plugin";
 export type {
-  OrganizationFeaturesPluginOptions,
+  FeatureFlagsPluginOptions,
 } from "./plugin";
 export type {
-  OrganizationFeaturesHooks,
+  FeatureFlagsHooks,
   HookContext,
   BeforeHookResult,
   AfterHookResult,
 } from "./hooks";
 export type {
   Feature,
-  OrganizationFeature,
-  OrganizationFeatureWithDetails,
+  FeatureFlag,
+  FeatureFlagWithDetails,
   CreateFeatureInput,
   UpdateFeatureInput,
-  SetOrganizationFeatureInput,
+  SetFeatureFlagInput,
 } from "../shared/types";
 

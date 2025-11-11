@@ -1,18 +1,18 @@
 import type {
   Feature,
-  OrganizationFeature,
-  OrganizationFeatureWithDetails,
+  FeatureFlag,
+  FeatureFlagWithDetails,
   CreateFeatureInput,
   UpdateFeatureInput,
-  SetOrganizationFeatureInput,
+  SetFeatureFlagInput,
 } from "../shared/types";
 
 export type {
   Feature,
-  OrganizationFeature,
-  OrganizationFeatureWithDetails,
+  FeatureFlag,
+  FeatureFlagWithDetails,
   CreateFeatureInput,
   UpdateFeatureInput,
-  SetOrganizationFeatureInput,
+  SetFeatureFlagInput,
 };
 

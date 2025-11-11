@@ -1,13 +1,13 @@
 /**
- * Hook types for organization features plugin
+ * Hook types for feature flags plugin
  */
 
 import type {
   Feature,
-  OrganizationFeatureWithDetails,
+  FeatureFlagWithDetails,
   CreateFeatureInput,
   UpdateFeatureInput,
-  SetOrganizationFeatureInput,
+  SetFeatureFlagInput,
 } from "../shared/types";
 
 export interface HookContext {
@@ -29,7 +29,7 @@ export interface AfterHookResult<T = unknown> {
 /**
  * Hook definitions for all actions
  */
-export interface OrganizationFeaturesHooks {
+export interface FeatureFlagsHooks {
   createFeature?: {
     before?: (
       input: CreateFeatureInput,
@@ -100,29 +100,29 @@ export interface OrganizationFeaturesHooks {
     ) => Promise<AfterHookResult<Feature>> | AfterHookResult<Feature>;
   };
 
-  setOrganizationFeature?: {
+  setFeatureFlag?: {
     before?: (
       organizationId: string,
       featureId: string,
-      input: SetOrganizationFeatureInput,
+      input: SetFeatureFlagInput,
       context: HookContext
     ) =>
-      | Promise<BeforeHookResult<SetOrganizationFeatureInput>>
-      | BeforeHookResult<SetOrganizationFeatureInput>;
+      | Promise<BeforeHookResult<SetFeatureFlagInput>>
+      | BeforeHookResult<SetFeatureFlagInput>;
     after?: (
       result:
-        | { data: OrganizationFeatureWithDetails; error: null }
+        | { data: FeatureFlagWithDetails; error: null }
         | { data: null; error: unknown },
       organizationId: string,
       featureId: string,
-      input: SetOrganizationFeatureInput,
+      input: SetFeatureFlagInput,
       context: HookContext
     ) =>
-      | Promise<AfterHookResult<OrganizationFeatureWithDetails>>
-      | AfterHookResult<OrganizationFeatureWithDetails>;
+      | Promise<AfterHookResult<FeatureFlagWithDetails>>
+      | AfterHookResult<FeatureFlagWithDetails>;
   };
 
-  removeOrganizationFeature?: {
+  removeFeatureFlag?: {
     before?: (
       organizationId: string,
       featureId: string,
@@ -140,20 +140,20 @@ export interface OrganizationFeaturesHooks {
       | AfterHookResult<{ success: boolean }>;
   };
 
-  getOrganizationFeatures?: {
+  getFeatureFlags?: {
     before?: (
       organizationId: string,
       context: HookContext
     ) => Promise<BeforeHookResult> | BeforeHookResult;
     after?: (
       result:
-        | { data: OrganizationFeatureWithDetails[]; error: null }
+        | { data: FeatureFlagWithDetails[]; error: null }
         | { data: null; error: unknown },
       organizationId: string,
       context: HookContext
     ) =>
-      | Promise<AfterHookResult<OrganizationFeatureWithDetails[]>>
-      | AfterHookResult<OrganizationFeatureWithDetails[]>;
+      | Promise<AfterHookResult<FeatureFlagWithDetails[]>>
+      | AfterHookResult<FeatureFlagWithDetails[]>;
   };
 
   getAvailableFeatures?: {
@@ -162,11 +162,11 @@ export interface OrganizationFeaturesHooks {
     ) => Promise<BeforeHookResult> | BeforeHookResult;
     after?: (
       result:
-        | { data: OrganizationFeatureWithDetails[]; error: null }
+        | { data: FeatureFlagWithDetails[]; error: null }
         | { data: null; error: unknown },
       context: HookContext
     ) =>
-      | Promise<AfterHookResult<OrganizationFeatureWithDetails[]>>
-      | AfterHookResult<OrganizationFeatureWithDetails[]>;
+      | Promise<AfterHookResult<FeatureFlagWithDetails[]>>
+      | AfterHookResult<FeatureFlagWithDetails[]>;
   };
 }

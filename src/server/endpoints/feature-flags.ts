@@ -1,19 +1,19 @@
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import type {
   Feature,
-  OrganizationFeature,
-  OrganizationFeatureWithDetails,
-  SetOrganizationFeatureInput,
+  FeatureFlag,
+  FeatureFlagWithDetails,
+  SetFeatureFlagInput,
 } from "../../shared/types";
-import type { OrganizationFeaturesHooks } from "../hooks";
+import type { FeatureFlagsHooks } from "../hooks";
 import { runBeforeHook, runAfterHook } from "../hook-helpers";
 
 /**
- * Endpoints for managing organization-specific feature settings
+ * Endpoints for managing organization-specific feature flags
  */
 
-export function createSetOrganizationFeatureEndpoint(
-  hooks?: OrganizationFeaturesHooks
+export function createSetFeatureFlagEndpoint(
+  hooks?: FeatureFlagsHooks
 ) {
   return createAuthEndpoint(
     "/organization-features/organizations/:id/features/:featureId",
@@ -25,12 +25,12 @@ export function createSetOrganizationFeatureEndpoint(
       const { adapter, session } = ctx.context;
       const organizationId = ctx.params.id;
       const featureId = ctx.params.featureId;
-      const body = (await ctx.request?.json()) as SetOrganizationFeatureInput;
+      const body = (await ctx.request?.json()) as SetFeatureFlagInput;
       const hookContext = { session };
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.setOrganizationFeature?.before as any,
+        hooks?.setFeatureFlag?.before as any,
         organizationId,
         featureId,
         body,
@@ -47,8 +47,8 @@ export function createSetOrganizationFeatureEndpoint(
         return ctx.json({ data: beforeResult.data });
       }
 
-      const inputData: SetOrganizationFeatureInput =
-        (beforeResult.data as SetOrganizationFeatureInput | undefined) || body;
+      const inputData: SetFeatureFlagInput =
+        (beforeResult.data as SetFeatureFlagInput | undefined) || body;
 
       // Verify admin access
       if (!session?.user) {
@@ -116,9 +116,9 @@ export function createSetOrganizationFeatureEndpoint(
         return ctx.json({ error: "Organization not found" }, { status: 404 });
       }
 
-      // Check if organization feature already exists
-      const existingOrgFeature = await adapter.findOne({
-        model: "organizationFeature",
+      // Check if feature flag already exists
+      const existingFeatureFlag = await adapter.findOne({
+        model: "featureFlag",
         select: ["id", "enabled"],
         where: [
           {
@@ -134,15 +134,15 @@ export function createSetOrganizationFeatureEndpoint(
         ],
       });
 
-      if (existingOrgFeature) {
+      if (existingFeatureFlag) {
         return ctx.json(
-          { error: "Organization feature already exists" },
+          { error: "Feature flag already exists" },
           { status: 409 }
         );
       }
 
-      const orgFeature = await adapter.create({
-        model: "organizationFeature",
+      const featureFlag = await adapter.create({
+        model: "featureFlag",
         data: {
           organizationId,
           featureId,
@@ -156,8 +156,8 @@ export function createSetOrganizationFeatureEndpoint(
         where: [{ field: "id", operator: "eq", value: featureId }],
       });
 
-      const resultData: OrganizationFeatureWithDetails = {
-        ...(orgFeature as OrganizationFeatureWithDetails),
+      const resultData: FeatureFlagWithDetails = {
+        ...(featureFlag as FeatureFlagWithDetails),
         feature: featureDetails as Feature,
       };
 
@@ -165,7 +165,7 @@ export function createSetOrganizationFeatureEndpoint(
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.setOrganizationFeature?.after as any,
+        hooks?.setFeatureFlag?.after as any,
         result,
         organizationId,
         featureId,
@@ -185,8 +185,8 @@ export function createSetOrganizationFeatureEndpoint(
   );
 }
 
-export function createRemoveOrganizationFeatureEndpoint(
-  hooks?: OrganizationFeaturesHooks
+export function createRemoveFeatureFlagEndpoint(
+  hooks?: FeatureFlagsHooks
 ) {
   return createAuthEndpoint(
     "/organization-features/organizations/:id/features/:featureId",
@@ -202,7 +202,7 @@ export function createRemoveOrganizationFeatureEndpoint(
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.removeOrganizationFeature?.before as any,
+        hooks?.removeFeatureFlag?.before as any,
         organizationId,
         featureId,
         hookContext
@@ -242,9 +242,9 @@ export function createRemoveOrganizationFeatureEndpoint(
         );
       }
 
-      // Check if organization feature exists
+      // Check if feature flag exists
       const existing: Record<"id", string> | null = await adapter.findOne({
-        model: "organizationFeature",
+        model: "featureFlag",
         select: ["id"],
         where: [
           {
@@ -262,14 +262,14 @@ export function createRemoveOrganizationFeatureEndpoint(
 
       if (!existing) {
         return ctx.json(
-          { error: "Organization feature not found" },
+          { error: "Feature flag not found" },
           { status: 404 }
         );
       }
 
-      // Delete organization feature
+      // Delete feature flag
       await adapter.delete({
-        model: "organizationFeature",
+        model: "featureFlag",
         where: [
           {
             field: "id",
@@ -283,7 +283,7 @@ export function createRemoveOrganizationFeatureEndpoint(
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.removeOrganizationFeature?.after as any,
+        hooks?.removeFeatureFlag?.after as any,
         result,
         organizationId,
         featureId,
@@ -302,8 +302,8 @@ export function createRemoveOrganizationFeatureEndpoint(
   );
 }
 
-export function createGetOrganizationFeaturesEndpoint(
-  hooks?: OrganizationFeaturesHooks
+export function createGetFeatureFlagsEndpoint(
+  hooks?: FeatureFlagsHooks
 ) {
   return createAuthEndpoint(
     "/organization-features/organizations/:id/features",
@@ -318,7 +318,7 @@ export function createGetOrganizationFeaturesEndpoint(
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.getOrganizationFeatures?.before as any,
+        hooks?.getFeatureFlags?.before as any,
         organizationId,
         hookContext
       );
@@ -363,9 +363,9 @@ export function createGetOrganizationFeaturesEndpoint(
         );
       }
 
-      // Get all enabled features for this organization
-      const orgFeatures: OrganizationFeature[] = await adapter.findMany({
-        model: "organizationFeature",
+      // Get all enabled feature flags for this organization
+      const featureFlags: FeatureFlag[] = await adapter.findMany({
+        model: "featureFlag",
         where: [
           {
             field: "organizationId",
@@ -380,14 +380,14 @@ export function createGetOrganizationFeaturesEndpoint(
         ],
       });
 
-      // Get all features for the organization features
+      // Get all features for the feature flags
       const features: Feature[] = await adapter.findMany({
         model: "feature",
         where: [
           {
             field: "id",
             operator: "in",
-            value: orgFeatures.map((of) => of.featureId),
+            value: featureFlags.map((ff) => ff.featureId),
           },
           {
             field: "active",
@@ -398,24 +398,24 @@ export function createGetOrganizationFeaturesEndpoint(
       });
       const featureMap = new Map(features.map((f) => [f.id, f]));
 
-      // Combine organization features with their feature details
-      const enabledFeatures: OrganizationFeatureWithDetails[] = orgFeatures
-        .filter((of) => featureMap.has(of.featureId))
-        .map((of) => ({
-          id: of.id,
-          organizationId: of.organizationId,
-          featureId: of.featureId,
-          enabled: of.enabled,
-          createdAt: of.createdAt,
-          updatedAt: of.updatedAt,
-          feature: featureMap.get(of.featureId)!,
+      // Combine feature flags with their feature details
+      const enabledFeatureFlags: FeatureFlagWithDetails[] = featureFlags
+        .filter((ff) => featureMap.has(ff.featureId))
+        .map((ff) => ({
+          id: ff.id,
+          organizationId: ff.organizationId,
+          featureId: ff.featureId,
+          enabled: ff.enabled,
+          createdAt: ff.createdAt,
+          updatedAt: ff.updatedAt,
+          feature: featureMap.get(ff.featureId)!,
         }));
 
-      const result = { data: enabledFeatures, error: null };
+      const result = { data: enabledFeatureFlags, error: null };
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.getOrganizationFeatures?.after as any,
+        hooks?.getFeatureFlags?.after as any,
         result,
         organizationId,
         hookContext
@@ -428,13 +428,13 @@ export function createGetOrganizationFeaturesEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || enabledFeatures });
+      return ctx.json({ data: afterResult.data || enabledFeatureFlags });
     }
   );
 }
 
 export function createGetAvailableFeaturesEndpoint(
-  hooks?: OrganizationFeaturesHooks
+  hooks?: FeatureFlagsHooks
 ) {
   return createAuthEndpoint(
     "/organization-features/features/available",
@@ -496,9 +496,9 @@ export function createGetAvailableFeaturesEndpoint(
         return ctx.json({ data: [] });
       }
 
-      // Get all enabled features for this organization
-      const orgFeatures: OrganizationFeature[] = await adapter.findMany({
-        model: "organizationFeature",
+      // Get all enabled feature flags for this organization
+      const featureFlags: FeatureFlag[] = await adapter.findMany({
+        model: "featureFlag",
         where: [
           {
             field: "organizationId",
@@ -513,8 +513,8 @@ export function createGetAvailableFeaturesEndpoint(
         ],
       });
 
-      // Get all features for the organization features
-      const featureIds = orgFeatures.map((of) => of.featureId);
+      // Get all features for the feature flags
+      const featureIds = featureFlags.map((ff) => ff.featureId);
       const features: Feature[] = await adapter.findMany({
         model: "feature",
         where: [
@@ -524,7 +524,7 @@ export function createGetAvailableFeaturesEndpoint(
             value: featureIds,
           },
           {
-            field: "enabled",
+            field: "active",
             operator: "eq",
             value: true,
           },
@@ -534,20 +534,20 @@ export function createGetAvailableFeaturesEndpoint(
       // Create a map for quick lookup
       const featureMap = new Map(features.map((f) => [f.id, f]));
 
-      // Combine organization features with their feature details
-      const enabledFeatures: OrganizationFeatureWithDetails[] = orgFeatures
-        .filter((of) => featureMap.has(of.featureId))
-        .map((of) => ({
-          id: of.id,
-          organizationId: of.organizationId,
-          featureId: of.featureId,
-          enabled: of.enabled,
-          createdAt: of.createdAt,
-          updatedAt: of.updatedAt,
-          feature: featureMap.get(of.featureId)!,
+      // Combine feature flags with their feature details
+      const enabledFeatureFlags: FeatureFlagWithDetails[] = featureFlags
+        .filter((ff) => featureMap.has(ff.featureId))
+        .map((ff) => ({
+          id: ff.id,
+          organizationId: ff.organizationId,
+          featureId: ff.featureId,
+          enabled: ff.enabled,
+          createdAt: ff.createdAt,
+          updatedAt: ff.updatedAt,
+          feature: featureMap.get(ff.featureId)!,
         }));
 
-      const result = { data: enabledFeatures, error: null };
+      const result = { data: enabledFeatureFlags, error: null };
 
       // Run after hook
       const afterResult = await runAfterHook(
@@ -563,7 +563,8 @@ export function createGetAvailableFeaturesEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || enabledFeatures });
+      return ctx.json({ data: afterResult.data || enabledFeatureFlags });
     }
   );
 }
+

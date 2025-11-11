@@ -1,11 +1,11 @@
-export { organizationFeaturesClientPlugin } from "./plugin";
-export type { OrganizationFeaturesClientActions } from "./plugin";
+export { featureFlagsClientPlugin } from "./plugin";
+export type { FeatureFlagsClientActions } from "./plugin";
 export type {
   Feature,
-  OrganizationFeature,
-  OrganizationFeatureWithDetails,
+  FeatureFlag,
+  FeatureFlagWithDetails,
   CreateFeatureInput,
   UpdateFeatureInput,
-  SetOrganizationFeatureInput,
+  SetFeatureFlagInput,
 } from "./types";
 

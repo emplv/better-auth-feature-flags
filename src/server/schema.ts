@@ -1,9 +1,9 @@
 import type { BetterAuthPlugin } from "better-auth";
 
 /**
- * Database schema definitions for the organization features plugin
+ * Database schema definitions for the feature flags plugin
  */
-export const organizationFeaturesSchema = {
+export const featureFlagsSchema = {
   features: {
     fields: {
       name: {
@@ -26,7 +26,7 @@ export const organizationFeaturesSchema = {
     },
     modelName: "feature",
   },
-  organizationFeatures: {
+  featureFlags: {
     fields: {
       organizationId: {
         type: "string",
@@ -51,6 +51,6 @@ export const organizationFeaturesSchema = {
         required: true,
       },
     },
-    modelName: "organizationFeature",
+    modelName: "featureFlag",
   },
 } satisfies BetterAuthPlugin["schema"];
