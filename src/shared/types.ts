@@ -7,7 +7,7 @@ export interface Feature {
   name: string;
   displayName: string;
   description: string | null;
-  enabled: boolean;
+  active: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,13 +25,13 @@ export interface CreateFeatureInput {
   name: string;
   displayName: string;
   description?: string;
-  enabled?: boolean;
+  active?: boolean;
 }
 
 export interface UpdateFeatureInput {
   displayName?: string;
   description?: string;
-  enabled?: boolean;
+  active?: boolean;
 }
 
 export interface SetOrganizationFeatureInput {

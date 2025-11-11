@@ -47,11 +47,11 @@ export interface OrganizationFeaturesClientActions {
   >;
 
   /**
-   * Toggle a feature's global enabled state (admin only)
+   * Toggle a feature's global active state (admin only)
    */
   toggleFeature: (
     featureId: string,
-    enabled: boolean,
+    active: boolean,
     fetchOptions?: BetterFetchOption
   ) => Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
 
@@ -150,12 +150,12 @@ export const organizationFeaturesClientPlugin = {
         return res;
       },
 
-      toggleFeature: async (featureId, enabled, fetchOptions) => {
+      toggleFeature: async (featureId, active, fetchOptions) => {
         const res = (await $fetch(
           `/organization-features/features/${featureId}/toggle`,
           {
             method: "POST",
-            body: { enabled },
+            body: { active },
             ...fetchOptions,
           }
         )) as { data: Feature; error: null } | { data: null; error: unknown };

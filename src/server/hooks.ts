@@ -89,13 +89,13 @@ export interface OrganizationFeaturesHooks {
   toggleFeature?: {
     before?: (
       featureId: string,
-      enabled: boolean,
+      active: boolean,
       context: HookContext
     ) => Promise<BeforeHookResult<boolean>> | BeforeHookResult<boolean>;
     after?: (
       result: { data: Feature; error: null } | { data: null; error: unknown },
       featureId: string,
-      enabled: boolean,
+      active: boolean,
       context: HookContext
     ) => Promise<AfterHookResult<Feature>> | AfterHookResult<Feature>;
   };

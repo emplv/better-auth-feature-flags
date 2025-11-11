@@ -101,7 +101,7 @@ export function createCreateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
           name: inputData.name,
           displayName: inputData.displayName,
           description: inputData.description || null,
-          enabled: inputData.enabled ?? true,
+          active: inputData.active ?? true,
         },
       });
 
@@ -298,7 +298,7 @@ export function createUpdateFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
           ...(inputData.description !== undefined && {
             description: inputData.description,
           }),
-          ...(inputData.enabled !== undefined && { enabled: inputData.enabled }),
+          ...(inputData.active !== undefined && { active: inputData.active }),
         },
       });
 
@@ -439,14 +439,14 @@ export function createToggleFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
     async (ctx) => {
       const { adapter, session } = ctx.context;
       const featureId = ctx.params.id;
-      const body = (await ctx.request?.json()) as { enabled: boolean };
+      const body = (await ctx.request?.json()) as { active: boolean };
       const hookContext = { session };
 
       // Run before hook
       const beforeResult = await runBeforeHook(
         hooks?.toggleFeature?.before as any,
         featureId,
-        body.enabled,
+        body.active,
         hookContext
       );
 
@@ -460,7 +460,7 @@ export function createToggleFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
         return ctx.json({ data: beforeResult.data });
       }
 
-      const enabled = beforeResult.data !== undefined ? beforeResult.data : body.enabled;
+      const active = beforeResult.data !== undefined ? beforeResult.data : body.active;
 
       // Verify admin access
       if (!session?.user) {
@@ -503,7 +503,7 @@ export function createToggleFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
         return ctx.json({ error: "Feature not found" }, { status: 404 });
       }
 
-      // Toggle feature enabled state
+      // Toggle feature active state
       const feature = await adapter.update({
         model: "feature",
         where: [
@@ -514,7 +514,7 @@ export function createToggleFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
           },
         ],
         update: {
-          enabled,
+          active,
         },
       });
 
@@ -525,7 +525,7 @@ export function createToggleFeatureEndpoint(hooks?: OrganizationFeaturesHooks) {
         hooks?.toggleFeature?.after as any,
         result,
         featureId,
-        enabled,
+        active,
         hookContext
       );
 

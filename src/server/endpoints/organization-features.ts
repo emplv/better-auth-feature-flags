@@ -74,11 +74,11 @@ export function createSetOrganizationFeatureEndpoint(
         );
       }
 
-      // Verify feature exists and is enabled
-      const feature: Pick<Feature, "id" | "enabled"> | null =
+      // Verify feature exists and is active
+      const feature: Pick<Feature, "id" | "active"> | null =
         await adapter.findOne({
           model: "feature",
-          select: ["id", "enabled"],
+          select: ["id", "active"],
           where: [
             {
               field: "id",
@@ -92,7 +92,7 @@ export function createSetOrganizationFeatureEndpoint(
         return ctx.json({ error: "Feature not found" }, { status: 404 });
       }
 
-      if (!feature.enabled) {
+      if (!feature.active) {
         return ctx.json(
           { error: "Feature is not enabled globally" },
           { status: 400 }
@@ -390,7 +390,7 @@ export function createGetOrganizationFeaturesEndpoint(
             value: orgFeatures.map((of) => of.featureId),
           },
           {
-            field: "enabled",
+            field: "active",
             operator: "eq",
             value: true,
           },

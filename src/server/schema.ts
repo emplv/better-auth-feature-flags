@@ -19,7 +19,7 @@ export const organizationFeaturesSchema = {
         type: "string",
         required: false,
       },
-      enabled: {
+      active: {
         type: "boolean",
         required: true,
       },

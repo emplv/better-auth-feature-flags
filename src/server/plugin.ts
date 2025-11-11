@@ -31,7 +31,7 @@ export interface OrganizationFeaturesPluginOptions {
  * - Enable/disable features for specific organizations
  *
  * Features are only available to organizations when:
- * - The feature is globally available (features.enabled = true)
+ * - The feature is globally available (features.active = true)
  * - AND the organization has the feature explicitly enabled (organizationFeatures.enabled = true)
  */
 export const organizationFeaturesPlugin = (
