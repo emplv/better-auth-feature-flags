@@ -14,7 +14,8 @@ export interface Feature {
 
 export interface FeatureFlag {
   id: string;
-  organizationId: string;
+  userId?: string;
+  organizationId?: string;
   featureId: string;
   enabled: boolean;
   createdAt: Date;
@@ -34,11 +35,16 @@ export interface UpdateFeatureInput {
   active?: boolean;
 }
 
-export interface SetFeatureFlagInput {
-  enabled: boolean;
-}
+export type SetFeatureFlagInput =
+  | {
+      enabled: boolean;
+      userId: string;
+    }
+  | {
+      enabled: boolean;
+      organizationId: string;
+    };
 
 export interface FeatureFlagWithDetails extends FeatureFlag {
   feature: Feature;
 }
-

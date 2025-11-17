@@ -102,8 +102,9 @@ export interface FeatureFlagsHooks {
 
   setFeatureFlag?: {
     before?: (
-      organizationId: string,
       featureId: string,
+      relationFieldName: string,
+      relationFieldValue: string,
       input: SetFeatureFlagInput,
       context: HookContext
     ) =>
@@ -113,8 +114,9 @@ export interface FeatureFlagsHooks {
       result:
         | { data: FeatureFlagWithDetails; error: null }
         | { data: null; error: unknown },
-      organizationId: string,
       featureId: string,
+      relationFieldName: string,
+      relationFieldValue: string,
       input: SetFeatureFlagInput,
       context: HookContext
     ) =>
@@ -124,16 +126,16 @@ export interface FeatureFlagsHooks {
 
   removeFeatureFlag?: {
     before?: (
-      organizationId: string,
       featureId: string,
+      featureFlagId: string,
       context: HookContext
     ) => Promise<BeforeHookResult> | BeforeHookResult;
     after?: (
       result:
         | { data: { success: boolean }; error: null }
         | { data: null; error: unknown },
-      organizationId: string,
       featureId: string,
+      featureFlagId: string,
       context: HookContext
     ) =>
       | Promise<AfterHookResult<{ success: boolean }>>
@@ -142,14 +144,12 @@ export interface FeatureFlagsHooks {
 
   getFeatureFlags?: {
     before?: (
-      organizationId: string,
       context: HookContext
     ) => Promise<BeforeHookResult> | BeforeHookResult;
     after?: (
       result:
         | { data: FeatureFlagWithDetails[]; error: null }
         | { data: null; error: unknown },
-      organizationId: string,
       context: HookContext
     ) =>
       | Promise<AfterHookResult<FeatureFlagWithDetails[]>>

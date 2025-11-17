@@ -1,4 +1,4 @@
-# @emplv/better-auth-organization-features
+# @emplv/better-auth-feature-flags
 
 A Better Auth plugin for managing feature flags for users and organizations. This plugin allows administrators to create, manage, and activate/deactivate features for users and organizations, while providing an easy way for users to check feature availability based on their active organization.
 
@@ -12,14 +12,15 @@ A Better Auth plugin for managing feature flags for users and organizations. Thi
 ## Installation
 
 ```bash
-npm install @emplv/better-auth-organization-features
+npm install @emplv/better-auth-feature-flags
 ```
 
 ## Prerequisites
 
 This plugin requires the following Better Auth plugins:
-- `@better-auth/organization` - For organization management
+
 - `@better-auth/admin` - For admin role verification
+- (optional) `@better-auth/organization` - For organization management
 
 ## Setup
 
@@ -29,7 +30,7 @@ Add the plugin to your Better Auth configuration:
 
 ```typescript
 import { betterAuth } from "better-auth";
-import { featureFlagsPlugin } from "@emplv/better-auth-organization-features";
+import { featureFlagsPlugin } from "@emplv/better-auth-feature-flags";
 
 export const auth = betterAuth({
   plugins: [
@@ -45,7 +46,7 @@ Add the client plugin to your auth client:
 
 ```typescript
 import { createAuthClient } from "better-auth/client";
-import { featureFlagsClientPlugin } from "@emplv/better-auth-organization-features/client";
+import { featureFlagsClientPlugin } from "@emplv/better-auth-feature-flags/client";
 
 const authClient = createAuthClient({
   plugins: [
@@ -62,23 +63,27 @@ The plugin supports before and after hooks for all actions, allowing you to inte
 ### Hook Types
 
 **Before Hooks** run before the action executes. They can:
+
 - Modify the input data
 - Skip the action entirely (return early with custom data)
 - Return an error to stop execution
 
 **After Hooks** run after the action completes. They can:
+
 - Modify the result data
 - Return an error to override the response
 
 ### Hook Context
 
 All hooks receive a `HookContext` object containing:
+
 - `session`: The current user session (or null if not authenticated)
 - Additional context properties can be added as needed
 
 ### Available Hooks
 
 All actions support hooks:
+
 - `createFeature` - Before/after creating a feature
 - `updateFeature` - Before/after updating a feature
 - `deleteFeature` - Before/after deleting a feature
@@ -92,22 +97,26 @@ All actions support hooks:
 ### Hook Return Types
 
 **Before Hook Result:**
+
 ```typescript
 interface BeforeHookResult<T = unknown> {
-  data?: T;           // Modified input data (optional)
-  error?: {           // Error to return (optional)
+  data?: T; // Modified input data (optional)
+  error?: {
+    // Error to return (optional)
     message: string;
     status?: number;
   };
-  skip?: boolean;     // If true, skip the action and return data
+  skip?: boolean; // If true, skip the action and return data
 }
 ```
 
 **After Hook Result:**
+
 ```typescript
 interface AfterHookResult<T = unknown> {
-  data?: T;           // Modified result data (optional)
-  error?: {           // Error to return (optional)
+  data?: T; // Modified result data (optional)
+  error?: {
+    // Error to return (optional)
     message: string;
     status?: number;
   };
@@ -119,7 +128,7 @@ interface AfterHookResult<T = unknown> {
 #### Basic Hook Example
 
 ```typescript
-import { featureFlagsPlugin } from "@emplv/better-auth-organization-features";
+import { featureFlagsPlugin } from "@emplv/better-auth-feature-flags";
 
 export const auth = betterAuth({
   plugins: [
@@ -129,7 +138,7 @@ export const auth = betterAuth({
           before: async (input, context) => {
             // Log the creation attempt
             console.log("Creating feature:", input.name);
-            
+
             // Modify the input
             return {
               data: {
@@ -143,7 +152,7 @@ export const auth = betterAuth({
             if (result.data) {
               console.log("Feature created:", result.data.id);
             }
-            
+
             // Return empty object to use original result
             return {};
           },
@@ -171,13 +180,13 @@ featureFlagsPlugin({
             },
           };
         }
-        
+
         // Allow deletion
         return {};
       },
     },
   },
-})
+});
 ```
 
 #### Modify Result Example
@@ -195,17 +204,17 @@ featureFlagsPlugin({
               fetchedAt: new Date().toISOString(),
             },
           }));
-          
+
           return {
             data: enhancedFeatures,
           };
         }
-        
+
         return {};
       },
     },
   },
-})
+});
 ```
 
 #### Validation Example
@@ -220,12 +229,13 @@ featureFlagsPlugin({
           return {
             skip: true,
             error: {
-              message: "Feature name must be lowercase alphanumeric with hyphens",
+              message:
+                "Feature name must be lowercase alphanumeric with hyphens",
               status: 400,
             },
           };
         }
-        
+
         // Continue with modified input
         return {
           data: {
@@ -236,7 +246,7 @@ featureFlagsPlugin({
       },
     },
   },
-})
+});
 ```
 
 #### Audit Logging Example
@@ -244,7 +254,7 @@ featureFlagsPlugin({
 ```typescript
 featureFlagsPlugin({
   hooks: {
-        setFeatureFlag: {
+    setFeatureFlag: {
       after: async (result, organizationId, featureId, input, context) => {
         if (result.data && context.session?.user) {
           // Log the action to an audit system
@@ -257,17 +267,18 @@ featureFlagsPlugin({
             timestamp: new Date(),
           });
         }
-        
+
         return {};
       },
     },
   },
-})
+});
 ```
 
 ### Hook Execution Flow
 
 1. **Before Hook** executes
+
    - If `skip: true` is returned, the action is skipped and the hook's data/error is returned
    - If `data` is returned, it replaces the original input
    - If `error` is returned, execution stops and error is returned
@@ -302,13 +313,12 @@ The plugin automatically creates two tables:
 ### `featureFlags` Table
 
 - `id` (string, primary key)
-- `organizationId` (string, foreign key) - References `organization.id`
+- `userId` (string?, foreign key) - References `user.id`
+- `organizationId` (string?, foreign key) - References `organization.id` (conditionally added)
 - `featureId` (string, foreign key) - References `feature.id`
 - `enabled` (boolean) - Organization-specific toggle
 - `createdAt` (date)
 - `updatedAt` (date)
-
-**Unique Constraint**: `(organizationId, featureId)`
 
 **Note**: Better Auth handles database migrations automatically. The tables will be created when you run your Better Auth setup.
 
@@ -323,10 +333,11 @@ All admin endpoints require authentication and admin role verification.
 ##### Create Feature
 
 ```http
-POST /api/auth/organization-features/features
+POST /api/auth/features
 ```
 
 **Request Body:**
+
 ```typescript
 {
   name: string;              // Unique feature identifier
@@ -337,6 +348,7 @@ POST /api/auth/organization-features/features
 ```
 
 **Response:**
+
 ```typescript
 {
   data: Feature;
@@ -345,8 +357,9 @@ POST /api/auth/organization-features/features
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.createFeature({
+const { data, error } = await authClient.features.createFeature({
   name: "advanced-analytics",
   displayName: "Advanced Analytics",
   description: "Enable advanced analytics dashboard",
@@ -357,10 +370,11 @@ const { data, error } = await authClient.organizationFeatures.createFeature({
 ##### Update Feature
 
 ```http
-PUT /api/auth/organization-features/features/:id
+PUT /api/auth/features/:id
 ```
 
 **Request Body:**
+
 ```typescript
 {
   displayName?: string;
@@ -370,6 +384,7 @@ PUT /api/auth/organization-features/features/:id
 ```
 
 **Response:**
+
 ```typescript
 {
   data: Feature;
@@ -378,8 +393,9 @@ PUT /api/auth/organization-features/features/:id
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.updateFeature(
+const { data, error } = await authClient.features.updateFeature(
   "feature-id",
   {
     displayName: "Updated Name",
@@ -391,10 +407,11 @@ const { data, error } = await authClient.organizationFeatures.updateFeature(
 ##### List Features
 
 ```http
-GET /api/auth/organization-features/features
+GET /api/auth/features
 ```
 
 **Response:**
+
 ```typescript
 {
   data: Feature[];
@@ -403,27 +420,32 @@ GET /api/auth/organization-features/features
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.listFeatures();
+const { data, error } = await authClient.features.listFeatures();
 ```
 
 ##### Delete Feature
 
 ```http
-DELETE /api/auth/organization-features/features/:id
+DELETE /api/auth/features/:id
 ```
 
 **Response:**
+
 ```typescript
 {
-  data: { success: boolean };
+  data: {
+    success: boolean;
+  }
   error: null;
 }
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.deleteFeature(
+const { data, error } = await authClient.features.deleteFeature(
   "feature-id"
 );
 ```
@@ -433,10 +455,11 @@ const { data, error } = await authClient.organizationFeatures.deleteFeature(
 ##### Toggle Feature
 
 ```http
-POST /api/auth/organization-features/features/:id/toggle
+POST /api/auth/features/:id/toggle
 ```
 
 **Request Body:**
+
 ```typescript
 {
   active: boolean;
@@ -444,6 +467,7 @@ POST /api/auth/organization-features/features/:id/toggle
 ```
 
 **Response:**
+
 ```typescript
 {
   data: Feature;
@@ -452,29 +476,36 @@ POST /api/auth/organization-features/features/:id/toggle
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.toggleFeature(
+const { data, error } = await authClient.features.toggleFeature(
   "feature-id",
   false
 );
 ```
 
-##### Set Organization Feature
+##### Set User/Organization Feature
 
-Enable or disable a feature for a specific organization.
+Enable or disable a feature for a specific feature - either user or organization.
 
 ```http
-POST /api/auth/organization-features/organizations/:organizationId/features/:featureId
+POST /api/auth/features/:featureId/flags
 ```
 
 **Request Body:**
+
 ```typescript
 {
   enabled: boolean;
+  userId: string;
+} | {
+  enabled: boolean;
+  organizationId: string;
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   data: FeatureFlag;
@@ -483,51 +514,59 @@ POST /api/auth/organization-features/organizations/:organizationId/features/:fea
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.setFeatureFlag(
-  "org-id",
+const { data, error } = await authClient.features.setFeatureFlag(
   "feature-id",
-  { enabled: true }
+  { enabled: true, userId: "user123" } || {
+    enabled: true,
+    organizationId: "org123",
+  }
 );
 ```
 
-**Note**: The feature must be globally active (`features.active = true`) before it can be enabled for an organization.
+**Note**: The feature must be globally active (`features.active = true`) before it can be enabled for a user or an organization.
 
-##### Remove Organization Feature
+##### Remove User/Organization Feature
 
 Remove a feature from an organization.
 
 ```http
-DELETE /api/auth/organization-features/organizations/:organizationId/features/:featureId
+DELETE /api/auth/features/:featureId/flags/:featureFlagId
 ```
 
 **Response:**
+
 ```typescript
 {
-  data: { success: boolean };
+  data: {
+    success: boolean;
+  }
   error: null;
 }
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.removeFeatureFlag(
-  "org-id",
+const { data, error } = await authClient.features.removeFeatureFlag(
   "feature-id"
+  "feature-flag-id",
 );
 ```
 
 #### User Endpoints
 
-##### Get Organization Features
+##### Get User/Organization Features
 
 Get all enabled features for a specific organization (members only).
 
 ```http
-GET /api/auth/organization-features/organizations/:organizationId/features
+GET /api/auth/features/flags/
 ```
 
 **Response:**
+
 ```typescript
 {
   data: FeatureFlagWithDetails[];
@@ -536,10 +575,9 @@ GET /api/auth/organization-features/organizations/:organizationId/features
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.getFeatureFlags(
-  "org-id"
-);
+const { data, error } = await authClient.features.getFeatureFlags();
 ```
 
 ##### Get Available Features
@@ -547,20 +585,22 @@ const { data, error } = await authClient.organizationFeatures.getFeatureFlags(
 Get all active features for the current user's active organization.
 
 ```http
-GET /api/auth/organization-features/features/available
+GET /api/auth/features/available
 ```
 
 **Response:**
+
 ```typescript
 {
-  data: FeatureFlagWithDetails[];
+  data: Feature[];
   error: null;
 }
 ```
 
 **Example:**
+
 ```typescript
-const { data, error } = await authClient.organizationFeatures.getAvailableFeatures();
+const { data, error } = await authClient.features.getAvailableFeatures();
 ```
 
 ## Client Methods
@@ -585,14 +625,14 @@ toggleFeature(featureId: string, active: boolean): Promise<{ data: Feature; erro
 
 // Enable/disable feature for organization
 setFeatureFlag(
-  organizationId: string,
+  userIdOrOrganizationId: string,
   featureId: string,
   data: SetFeatureFlagInput
 ): Promise<{ data: FeatureFlagWithDetails; error: null } | { data: null; error: unknown }>;
 
 // Remove feature from organization
 removeFeatureFlag(
-  organizationId: string,
+  featureFlagId: string,
   featureId: string
 ): Promise<{ data: { success: boolean }; error: null } | { data: null; error: unknown }>;
 ```
@@ -614,7 +654,7 @@ A feature is enabled for an organization when **both** conditions are met:
 1. **Global Feature Active**: `features.active = true`
 2. **Feature Flag Enabled**: `featureFlags.enabled = true` (exists in `featureFlags` table)
 
-If `features.active = false`, the feature is disabled for **all** organizations, regardless of organization-specific settings.
+If `features.active = false`, the feature is disabled for **all** users/organizations, regardless of organization-specific settings.
 
 ## Usage Examples
 
@@ -623,7 +663,10 @@ If `features.active = false`, the feature is disabled for **all** organizations,
 ```tsx
 import { useEffect } from "react";
 import { createAuthClient } from "better-auth/client";
-import { featureFlagsClientPlugin, useFeatureFlag } from "@emplv/better-auth-organization-features/client";
+import {
+  featureFlagsClientPlugin,
+  useFeatureFlag,
+} from "@emplv/better-auth-feature-flags/client";
 
 const authClient = createAuthClient({
   plugins: [featureFlagsClientPlugin],
@@ -634,7 +677,7 @@ function App() {
 
   // Fetch available features on mount
   useEffect(() => {
-    authClient.organizationFeatures.getAvailableFeatures();
+    authClient.features.getAvailableFeatures();
   }, []);
 
   return (
@@ -653,7 +696,7 @@ import { authClient } from "./auth-client";
 
 async function createAndEnableFeature() {
   // Create a new feature
-  const { data: feature } = await authClient.organizationFeatures.createFeature({
+  const { data: feature } = await authClient.features.createFeature({
     name: "new-feature",
     displayName: "New Feature",
     description: "A new feature",
@@ -662,11 +705,9 @@ async function createAndEnableFeature() {
   if (!feature) return;
 
   // Enable it for an organization
-  await authClient.organizationFeatures.setFeatureFlag(
-    "org-id",
-    feature.id,
-    { active: true }
-  );
+  await authClient.features.setFeatureFlag("user-or-org-id", feature.id, {
+    active: true,
+  });
 }
 ```
 
@@ -685,7 +726,8 @@ interface Feature {
 
 interface FeatureFlag {
   id: string;
-  organizationId: string;
+  userId?: string;
+  organizationId?: string;
   featureId: string;
   enabled: boolean;
   createdAt: Date;
@@ -709,15 +751,20 @@ interface UpdateFeatureInput {
   active?: boolean;
 }
 
-interface SetFeatureFlagInput {
-  enabled: boolean;
-}
+type SetFeatureFlagInput =
+  | {
+      enabled: boolean;
+      userId: string;
+    }
+  | {
+      enabled: boolean;
+      organizationId: string;
+    };
 ```
 
 ## Security
 
 - **Admin Endpoints**: All admin endpoints require authentication and verify the user has admin role
-- **Organization Endpoints**: Organization feature endpoints verify membership before allowing access
 - **Feature Checks**: Feature availability checks respect organization context from the user session
 
 ## License
@@ -727,4 +774,3 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-

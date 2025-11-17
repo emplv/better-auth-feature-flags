@@ -1,17 +1,17 @@
 import type { BetterAuthPlugin } from "better-auth";
-import { featureFlagsSchema } from "./schema";
+import { createFeatureFlagsSchema } from "./schema";
 import {
   createCreateFeatureEndpoint,
   createListFeaturesEndpoint,
   createUpdateFeatureEndpoint,
   createDeleteFeatureEndpoint,
   createToggleFeatureEndpoint,
+  createGetAvailableFeaturesEndpoint,
 } from "./endpoints/features";
 import {
   createSetFeatureFlagEndpoint,
   createRemoveFeatureFlagEndpoint,
   createGetFeatureFlagsEndpoint,
-  createGetAvailableFeaturesEndpoint,
 } from "./endpoints/feature-flags";
 import type { FeatureFlagsHooks } from "./hooks";
 
@@ -20,6 +20,10 @@ export interface FeatureFlagsPluginOptions {
    * Hooks for intercepting and modifying behavior of all actions
    */
   hooks?: FeatureFlagsHooks;
+  /**
+   * Allow for organization-specific feature flags
+   */
+  allowOrganizationSpecificFeatureFlags?: boolean;
 }
 
 /**
@@ -37,22 +41,19 @@ export interface FeatureFlagsPluginOptions {
 export const featureFlagsPlugin = (
   options?: FeatureFlagsPluginOptions
 ): BetterAuthPlugin => {
-  const hooks = options?.hooks;
-
   return {
-    id: "organization-features",
-    schema: featureFlagsSchema,
+    id: "features",
+    schema: createFeatureFlagsSchema(options),
     endpoints: {
-      createFeature: createCreateFeatureEndpoint(hooks),
-      listFeatures: createListFeaturesEndpoint(hooks),
-      updateFeature: createUpdateFeatureEndpoint(hooks),
-      deleteFeature: createDeleteFeatureEndpoint(hooks),
-      toggleFeature: createToggleFeatureEndpoint(hooks),
-      setFeatureFlag: createSetFeatureFlagEndpoint(hooks),
-      removeFeatureFlag: createRemoveFeatureFlagEndpoint(hooks),
-      getFeatureFlags: createGetFeatureFlagsEndpoint(hooks),
-      getAvailableFeatures: createGetAvailableFeaturesEndpoint(hooks),
+      createFeature: createCreateFeatureEndpoint(options),
+      listFeatures: createListFeaturesEndpoint(options),
+      updateFeature: createUpdateFeatureEndpoint(options),
+      deleteFeature: createDeleteFeatureEndpoint(options),
+      toggleFeature: createToggleFeatureEndpoint(options),
+      getAvailableFeatures: createGetAvailableFeaturesEndpoint(options),
+      setFeatureFlag: createSetFeatureFlagEndpoint(options),
+      removeFeatureFlag: createRemoveFeatureFlagEndpoint(options),
+      getFeatureFlags: createGetFeatureFlagsEndpoint(options),
     },
   } satisfies BetterAuthPlugin;
 };
-

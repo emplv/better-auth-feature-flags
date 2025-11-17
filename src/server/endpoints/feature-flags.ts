@@ -5,7 +5,7 @@ import type {
   FeatureFlagWithDetails,
   SetFeatureFlagInput,
 } from "../../shared/types";
-import type { FeatureFlagsHooks } from "../hooks";
+import { FeatureFlagsPluginOptions } from "../plugin";
 import { runBeforeHook, runAfterHook } from "../hook-helpers";
 
 /**
@@ -13,26 +13,43 @@ import { runBeforeHook, runAfterHook } from "../hook-helpers";
  */
 
 export function createSetFeatureFlagEndpoint(
-  hooks?: FeatureFlagsHooks
+  options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/organization-features/organizations/:id/features/:featureId",
+    "/features/:featureId/flags",
     {
       method: "POST",
       use: [sessionMiddleware],
     },
     async (ctx) => {
       const { adapter, session } = ctx.context;
-      const organizationId = ctx.params.id;
       const featureId = ctx.params.featureId;
       const body = (await ctx.request?.json()) as SetFeatureFlagInput;
       const hookContext = { session };
+      let relationFieldName = "";
+      let relationFieldValue = "";
+
+      if ("userId" in body) {
+        relationFieldName = "userId";
+        relationFieldValue = body.userId;
+      } else if (
+        options?.allowOrganizationSpecificFeatureFlags &&
+        "organizationId" in body
+      ) {
+        relationFieldName = "organizationId";
+        relationFieldValue = body.organizationId;
+      }
+
+      if (!relationFieldName || !relationFieldValue) {
+        return ctx.json({ error: "Invalid input" }, { status: 400 });
+      }
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.setFeatureFlag?.before as any,
-        organizationId,
+        options?.hooks?.setFeatureFlag?.before as any,
         featureId,
+        relationFieldName,
+        relationFieldValue,
         body,
         hookContext
       );
@@ -99,21 +116,26 @@ export function createSetFeatureFlagEndpoint(
         );
       }
 
-      // Verify organization exists
-      const organization: Record<"id", string> | null = await adapter.findOne({
-        model: "organization",
-        select: ["id"],
-        where: [
+      if (relationFieldName === "userId") {
+        const user: Record<"id", string> | null = await adapter.findOne({
+          model: "user",
+          select: ["id"],
+          where: [{ field: "id", operator: "eq", value: relationFieldValue }],
+        });
+        if (!user) {
+          return ctx.json({ error: "User not found" }, { status: 404 });
+        }
+      } else {
+        const organization: Record<"id", string> | null = await adapter.findOne(
           {
-            field: "id",
-            operator: "eq",
-            value: organizationId,
-          },
-        ],
-      });
-
-      if (!organization) {
-        return ctx.json({ error: "Organization not found" }, { status: 404 });
+            model: "organization",
+            select: ["id"],
+            where: [{ field: "id", operator: "eq", value: relationFieldValue }],
+          }
+        );
+        if (!organization) {
+          return ctx.json({ error: "Organization not found" }, { status: 404 });
+        }
       }
 
       // Check if feature flag already exists
@@ -122,9 +144,9 @@ export function createSetFeatureFlagEndpoint(
         select: ["id", "enabled"],
         where: [
           {
-            field: "organizationId",
+            field: relationFieldName,
             operator: "eq",
-            value: organizationId,
+            value: relationFieldValue,
           },
           {
             field: "featureId",
@@ -144,7 +166,7 @@ export function createSetFeatureFlagEndpoint(
       const featureFlag = await adapter.create({
         model: "featureFlag",
         data: {
-          organizationId,
+          [relationFieldName]: relationFieldValue,
           featureId,
           enabled: inputData.enabled,
         },
@@ -165,10 +187,11 @@ export function createSetFeatureFlagEndpoint(
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.setFeatureFlag?.after as any,
+        options?.hooks?.setFeatureFlag?.after as any,
         result,
-        organizationId,
         featureId,
+        relationFieldName,
+        relationFieldValue,
         inputData,
         hookContext
       );
@@ -186,25 +209,25 @@ export function createSetFeatureFlagEndpoint(
 }
 
 export function createRemoveFeatureFlagEndpoint(
-  hooks?: FeatureFlagsHooks
+  options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/organization-features/organizations/:id/features/:featureId",
+    "/features/:featureId/flags/:featureFlagId",
     {
       method: "DELETE",
       use: [sessionMiddleware],
     },
     async (ctx) => {
       const { adapter, session } = ctx.context;
-      const organizationId = ctx.params.id;
+      const featureFlagId = ctx.params.featureFlagId;
       const featureId = ctx.params.featureId;
       const hookContext = { session };
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.removeFeatureFlag?.before as any,
-        organizationId,
+        options?.hooks?.removeFeatureFlag?.before as any,
         featureId,
+        featureFlagId,
         hookContext
       );
 
@@ -248,9 +271,9 @@ export function createRemoveFeatureFlagEndpoint(
         select: ["id"],
         where: [
           {
-            field: "organizationId",
+            field: "id",
             operator: "eq",
-            value: organizationId,
+            value: featureFlagId,
           },
           {
             field: "featureId",
@@ -261,10 +284,7 @@ export function createRemoveFeatureFlagEndpoint(
       });
 
       if (!existing) {
-        return ctx.json(
-          { error: "Feature flag not found" },
-          { status: 404 }
-        );
+        return ctx.json({ error: "Feature flag not found" }, { status: 404 });
       }
 
       // Delete feature flag
@@ -283,10 +303,10 @@ export function createRemoveFeatureFlagEndpoint(
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.removeFeatureFlag?.after as any,
+        options?.hooks?.removeFeatureFlag?.after as any,
         result,
-        organizationId,
         featureId,
+        featureFlagId,
         hookContext
       );
 
@@ -303,23 +323,21 @@ export function createRemoveFeatureFlagEndpoint(
 }
 
 export function createGetFeatureFlagsEndpoint(
-  hooks?: FeatureFlagsHooks
+  options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/organization-features/organizations/:id/features",
+    "/features/flags",
     {
       method: "GET",
       use: [sessionMiddleware],
     },
     async (ctx) => {
       const { adapter, session } = ctx.context;
-      const organizationId = ctx.params.id;
       const hookContext = { session };
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.getFeatureFlags?.before as any,
-        organizationId,
+        options?.hooks?.getFeatureFlags?.before as any,
         hookContext
       );
 
@@ -338,46 +356,26 @@ export function createGetFeatureFlagsEndpoint(
         return ctx.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      // Verify user is member of organization
-      const membership: Record<"id", string> | null = await adapter.findOne({
-        model: "member",
-        select: ["id"],
-        where: [
-          {
-            field: "organizationId",
-            operator: "eq",
-            value: organizationId,
-          },
-          {
-            field: "userId",
-            operator: "eq",
-            value: session.user.id,
-          },
-        ],
-      });
+      const where: any[] = [
+        {
+          field: "userId",
+          operator: "eq",
+          value: session.user.id,
+        },
+      ];
 
-      if (!membership) {
-        return ctx.json(
-          { error: "Forbidden: Not a member of this organization" },
-          { status: 403 }
-        );
+      if (session.session.activeOrganizationId) {
+        where.push({
+          field: "organizationId",
+          operator: "eq",
+          value: session.session.activeOrganizationId,
+        });
       }
 
-      // Get all enabled feature flags for this organization
+      // Get all enabled feature flags for this user / organization
       const featureFlags: FeatureFlag[] = await adapter.findMany({
         model: "featureFlag",
-        where: [
-          {
-            field: "organizationId",
-            operator: "eq",
-            value: organizationId,
-          },
-          {
-            field: "enabled",
-            operator: "eq",
-            value: true,
-          },
-        ],
+        where,
       });
 
       // Get all features for the feature flags
@@ -403,6 +401,7 @@ export function createGetFeatureFlagsEndpoint(
         .filter((ff) => featureMap.has(ff.featureId))
         .map((ff) => ({
           id: ff.id,
+          userId: ff.userId,
           organizationId: ff.organizationId,
           featureId: ff.featureId,
           enabled: ff.enabled,
@@ -415,143 +414,7 @@ export function createGetFeatureFlagsEndpoint(
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.getFeatureFlags?.after as any,
-        result,
-        organizationId,
-        hookContext
-      );
-
-      if (afterResult.error) {
-        return ctx.json(
-          { error: afterResult.error.message },
-          { status: afterResult.error.status || 500 }
-        );
-      }
-
-      return ctx.json({ data: afterResult.data || enabledFeatureFlags });
-    }
-  );
-}
-
-export function createGetAvailableFeaturesEndpoint(
-  hooks?: FeatureFlagsHooks
-) {
-  return createAuthEndpoint(
-    "/organization-features/features/available",
-    {
-      method: "GET",
-      use: [sessionMiddleware],
-    },
-    async (ctx) => {
-      const { adapter, session } = ctx.context;
-      const hookContext = { session };
-
-      // Run before hook
-      const beforeResult = await runBeforeHook(
-        hooks?.getAvailableFeatures?.before as any,
-        hookContext
-      );
-
-      if (beforeResult.skip) {
-        if (beforeResult.error) {
-          return ctx.json(
-            { error: beforeResult.error.message },
-            { status: beforeResult.error.status || 400 }
-          );
-        }
-        return ctx.json({ data: beforeResult.data || [] });
-      }
-
-      // Verify session
-      if (!session?.user) {
-        return ctx.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      // Get active organization from session context
-      const activeOrganizationId = session.session.activeOrganizationId;
-
-      if (!activeOrganizationId) {
-        return ctx.json({ data: [] });
-      }
-
-      // Verify user is member of organization
-      const membership: Record<"id", string> | null = await adapter.findOne({
-        model: "member",
-        select: ["id"],
-        where: [
-          {
-            field: "organizationId",
-            operator: "eq",
-            value: activeOrganizationId,
-          },
-          {
-            field: "userId",
-            operator: "eq",
-            value: session.user.id,
-          },
-        ],
-      });
-
-      if (!membership) {
-        return ctx.json({ data: [] });
-      }
-
-      // Get all enabled feature flags for this organization
-      const featureFlags: FeatureFlag[] = await adapter.findMany({
-        model: "featureFlag",
-        where: [
-          {
-            field: "organizationId",
-            operator: "eq",
-            value: activeOrganizationId,
-          },
-          {
-            field: "enabled",
-            operator: "eq",
-            value: true,
-          },
-        ],
-      });
-
-      // Get all features for the feature flags
-      const featureIds = featureFlags.map((ff) => ff.featureId);
-      const features: Feature[] = await adapter.findMany({
-        model: "feature",
-        where: [
-          {
-            field: "id",
-            operator: "in",
-            value: featureIds,
-          },
-          {
-            field: "active",
-            operator: "eq",
-            value: true,
-          },
-        ],
-      });
-
-      // Create a map for quick lookup
-      const featureMap = new Map(features.map((f) => [f.id, f]));
-
-      // Combine feature flags with their feature details
-      const enabledFeatureFlags: FeatureFlagWithDetails[] = featureFlags
-        .filter((ff) => featureMap.has(ff.featureId))
-        .map((ff) => ({
-          id: ff.id,
-          organizationId: ff.organizationId,
-          featureId: ff.featureId,
-          enabled: ff.enabled,
-          createdAt: ff.createdAt,
-          updatedAt: ff.updatedAt,
-          feature: featureMap.get(ff.featureId)!,
-        }));
-
-      const result = { data: enabledFeatureFlags, error: null };
-
-      // Run after hook
-      const afterResult = await runAfterHook(
-        hooks?.getAvailableFeatures?.after as any,
+        options?.hooks?.getFeatureFlags?.after as any,
         result,
         hookContext
       );
@@ -567,4 +430,3 @@ export function createGetAvailableFeaturesEndpoint(
     }
   );
 }
-

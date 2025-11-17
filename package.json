@@ -1,5 +1,5 @@
 {
-  "name": "@emplv/better-auth-organization-features",
+  "name": "@emplv/better-auth-feature-flags",
   "version": "0.1.0",
   "description": "Better Auth plugin for managing feature flags",
   "main": "./dist/server/index.js",

@@ -1,18 +1,21 @@
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import type {
+  Feature,
   CreateFeatureInput,
   UpdateFeatureInput,
 } from "../../shared/types";
-import type { FeatureFlagsHooks } from "../hooks";
+import { FeatureFlagsPluginOptions } from "../plugin";
 import { runBeforeHook, runAfterHook } from "../hook-helpers";
 
 /**
  * Admin-only endpoints for managing features
  */
 
-export function createCreateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
+export function createCreateFeatureEndpoint(
+  options?: FeatureFlagsPluginOptions
+) {
   return createAuthEndpoint(
-    "/organization-features/features",
+    "/features",
     {
       method: "POST",
       use: [sessionMiddleware],
@@ -24,7 +27,7 @@ export function createCreateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.createFeature?.before as any,
+        options?.hooks?.createFeature?.before as any,
         body,
         hookContext
       );
@@ -39,7 +42,8 @@ export function createCreateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
         return ctx.json({ data: beforeResult.data });
       }
 
-      const inputData: CreateFeatureInput = (beforeResult.data as CreateFeatureInput | undefined) || body;
+      const inputData: CreateFeatureInput =
+        (beforeResult.data as CreateFeatureInput | undefined) || body;
 
       // Verify session has user
       if (!session?.user) {
@@ -109,7 +113,7 @@ export function createCreateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.createFeature?.after as any,
+        options?.hooks?.createFeature?.after as any,
         result,
         inputData,
         hookContext
@@ -127,9 +131,11 @@ export function createCreateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
   );
 }
 
-export function createListFeaturesEndpoint(hooks?: FeatureFlagsHooks) {
+export function createListFeaturesEndpoint(
+  options?: FeatureFlagsPluginOptions
+) {
   return createAuthEndpoint(
-    "/organization-features/features",
+    "/features",
     {
       method: "GET",
       use: [sessionMiddleware],
@@ -140,7 +146,7 @@ export function createListFeaturesEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.listFeatures?.before as any,
+        options?.hooks?.listFeatures?.before as any,
         hookContext
       );
 
@@ -190,7 +196,7 @@ export function createListFeaturesEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.listFeatures?.after as any,
+        options?.hooks?.listFeatures?.after as any,
         result,
         hookContext
       );
@@ -207,9 +213,11 @@ export function createListFeaturesEndpoint(hooks?: FeatureFlagsHooks) {
   );
 }
 
-export function createUpdateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
+export function createUpdateFeatureEndpoint(
+  options?: FeatureFlagsPluginOptions
+) {
   return createAuthEndpoint(
-    "/organization-features/features/:id",
+    "/features/:id",
     {
       method: "PUT",
       use: [sessionMiddleware],
@@ -222,7 +230,7 @@ export function createUpdateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.updateFeature?.before as any,
+        options?.hooks?.updateFeature?.before as any,
         featureId,
         body,
         hookContext
@@ -238,7 +246,8 @@ export function createUpdateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
         return ctx.json({ data: beforeResult.data });
       }
 
-      const inputData: UpdateFeatureInput = (beforeResult.data as UpdateFeatureInput | undefined) || body;
+      const inputData: UpdateFeatureInput =
+        (beforeResult.data as UpdateFeatureInput | undefined) || body;
 
       // Verify admin access
       if (!session?.user) {
@@ -306,7 +315,7 @@ export function createUpdateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.updateFeature?.after as any,
+        options?.hooks?.updateFeature?.after as any,
         result,
         featureId,
         inputData,
@@ -325,9 +334,11 @@ export function createUpdateFeatureEndpoint(hooks?: FeatureFlagsHooks) {
   );
 }
 
-export function createDeleteFeatureEndpoint(hooks?: FeatureFlagsHooks) {
+export function createDeleteFeatureEndpoint(
+  options?: FeatureFlagsPluginOptions
+) {
   return createAuthEndpoint(
-    "/organization-features/features/:id",
+    "/features/:id",
     {
       method: "DELETE",
       use: [sessionMiddleware],
@@ -339,7 +350,7 @@ export function createDeleteFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.deleteFeature?.before as any,
+        options?.hooks?.deleteFeature?.before as any,
         featureId,
         hookContext
       );
@@ -411,7 +422,7 @@ export function createDeleteFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.deleteFeature?.after as any,
+        options?.hooks?.deleteFeature?.after as any,
         result,
         featureId,
         hookContext
@@ -429,9 +440,11 @@ export function createDeleteFeatureEndpoint(hooks?: FeatureFlagsHooks) {
   );
 }
 
-export function createToggleFeatureEndpoint(hooks?: FeatureFlagsHooks) {
+export function createToggleFeatureEndpoint(
+  options?: FeatureFlagsPluginOptions
+) {
   return createAuthEndpoint(
-    "/organization-features/features/:id/toggle",
+    "/features/:id/toggle",
     {
       method: "POST",
       use: [sessionMiddleware],
@@ -444,7 +457,7 @@ export function createToggleFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run before hook
       const beforeResult = await runBeforeHook(
-        hooks?.toggleFeature?.before as any,
+        options?.hooks?.toggleFeature?.before as any,
         featureId,
         body.active,
         hookContext
@@ -460,7 +473,8 @@ export function createToggleFeatureEndpoint(hooks?: FeatureFlagsHooks) {
         return ctx.json({ data: beforeResult.data });
       }
 
-      const active = beforeResult.data !== undefined ? beforeResult.data : body.active;
+      const active =
+        beforeResult.data !== undefined ? beforeResult.data : body.active;
 
       // Verify admin access
       if (!session?.user) {
@@ -522,7 +536,7 @@ export function createToggleFeatureEndpoint(hooks?: FeatureFlagsHooks) {
 
       // Run after hook
       const afterResult = await runAfterHook(
-        hooks?.toggleFeature?.after as any,
+        options?.hooks?.toggleFeature?.after as any,
         result,
         featureId,
         active,
@@ -537,6 +551,73 @@ export function createToggleFeatureEndpoint(hooks?: FeatureFlagsHooks) {
       }
 
       return ctx.json({ data: afterResult.data || feature });
+    }
+  );
+}
+
+export function createGetAvailableFeaturesEndpoint(
+  options?: FeatureFlagsPluginOptions
+) {
+  return createAuthEndpoint(
+    "/features/available",
+    {
+      method: "GET",
+      use: [sessionMiddleware],
+    },
+    async (ctx) => {
+      const { adapter, session } = ctx.context;
+      const hookContext = { session };
+
+      // Run before hook
+      const beforeResult = await runBeforeHook(
+        options?.hooks?.getAvailableFeatures?.before as any,
+        hookContext
+      );
+
+      if (beforeResult.skip) {
+        if (beforeResult.error) {
+          return ctx.json(
+            { error: beforeResult.error.message },
+            { status: beforeResult.error.status || 400 }
+          );
+        }
+        return ctx.json({ data: beforeResult.data || [] });
+      }
+
+      // Verify session
+      if (!session?.user) {
+        return ctx.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // Get all features for the feature flags
+      const features: Feature[] = await adapter.findMany({
+        model: "feature",
+        where: [
+          {
+            field: "active",
+            operator: "eq",
+            value: true,
+          },
+        ],
+      });
+
+      const result = { data: features, error: null };
+
+      // Run after hook
+      const afterResult = await runAfterHook(
+        options?.hooks?.getAvailableFeatures?.after as any,
+        result,
+        hookContext
+      );
+
+      if (afterResult.error) {
+        return ctx.json(
+          { error: afterResult.error.message },
+          { status: afterResult.error.status || 500 }
+        );
+      }
+
+      return ctx.json({ data: afterResult.data || features });
     }
   );
 }

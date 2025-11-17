@@ -56,10 +56,9 @@ export interface FeatureFlagsClientActions {
   ) => Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
 
   /**
-   * Enable or disable a feature flag for a specific organization (admin only)
+   * Enable or disable a feature flag for a specific user/organization (admin only)
    */
   setFeatureFlag: (
-    organizationId: string,
     featureId: string,
     data: SetFeatureFlagInput,
     fetchOptions?: BetterFetchOption
@@ -72,8 +71,8 @@ export interface FeatureFlagsClientActions {
    * Remove a feature flag from an organization (admin only)
    */
   removeFeatureFlag: (
-    organizationId: string,
     featureId: string,
+    featureFlagId: string,
     fetchOptions?: BetterFetchOption
   ) => Promise<
     { data: { success: boolean }; error: null } | { data: null; error: unknown }
@@ -83,7 +82,6 @@ export interface FeatureFlagsClientActions {
    * Get all enabled feature flags for a specific organization (members only)
    */
   getFeatureFlags: (
-    organizationId: string,
     fetchOptions?: BetterFetchOption
   ) => Promise<
     | { data: FeatureFlagWithDetails[]; error: null }
@@ -102,12 +100,12 @@ export interface FeatureFlagsClientActions {
 }
 
 export const featureFlagsClientPlugin = {
-  id: "organization-features",
+  id: "features",
   $InferServerPlugin: {} as ReturnType<typeof featureFlagsPlugin>,
   getActions: ($fetch) => {
     const actions: FeatureFlagsClientActions = {
       createFeature: async (data, fetchOptions) => {
-        const res = (await $fetch("/organization-features/features", {
+        const res = (await $fetch("/features", {
           method: "POST",
           body: data,
           ...fetchOptions,
@@ -116,19 +114,16 @@ export const featureFlagsClientPlugin = {
       },
 
       updateFeature: async (featureId, data, fetchOptions) => {
-        const res = (await $fetch(
-          `/organization-features/features/${featureId}`,
-          {
-            method: "PUT",
-            body: data,
-            ...fetchOptions,
-          }
-        )) as { data: Feature; error: null } | { data: null; error: unknown };
+        const res = (await $fetch(`/features/${featureId}`, {
+          method: "PUT",
+          body: data,
+          ...fetchOptions,
+        })) as { data: Feature; error: null } | { data: null; error: unknown };
         return res;
       },
 
       listFeatures: async (fetchOptions) => {
-        const res = (await $fetch("/organization-features/features", {
+        const res = (await $fetch("/features", {
           method: "GET",
           ...fetchOptions,
         })) as
@@ -138,56 +133,38 @@ export const featureFlagsClientPlugin = {
       },
 
       deleteFeature: async (featureId, fetchOptions) => {
-        const res = (await $fetch(
-          `/organization-features/features/${featureId}`,
-          {
-            method: "DELETE",
-            ...fetchOptions,
-          }
-        )) as
+        const res = (await $fetch(`/features/${featureId}`, {
+          method: "DELETE",
+          ...fetchOptions,
+        })) as
           | { data: { success: boolean }; error: null }
           | { data: null; error: unknown };
         return res;
       },
 
       toggleFeature: async (featureId, active, fetchOptions) => {
-        const res = (await $fetch(
-          `/organization-features/features/${featureId}/toggle`,
-          {
-            method: "POST",
-            body: { active },
-            ...fetchOptions,
-          }
-        )) as { data: Feature; error: null } | { data: null; error: unknown };
+        const res = (await $fetch(`/features/${featureId}/toggle`, {
+          method: "POST",
+          body: { active },
+          ...fetchOptions,
+        })) as { data: Feature; error: null } | { data: null; error: unknown };
         return res;
       },
 
-      setFeatureFlag: async (
-        organizationId,
-        featureId,
-        data,
-        fetchOptions
-      ) => {
-        const res = (await $fetch(
-          `/organization-features/organizations/${organizationId}/features/${featureId}`,
-          {
-            method: "POST",
-            body: data,
-            ...fetchOptions,
-          }
-        )) as
+      setFeatureFlag: async (featureId, data, fetchOptions) => {
+        const res = (await $fetch(`/features/${featureId}/flags`, {
+          method: "POST",
+          body: data,
+          ...fetchOptions,
+        })) as
           | { data: FeatureFlagWithDetails; error: null }
           | { data: null; error: unknown };
         return res;
       },
 
-      removeFeatureFlag: async (
-        organizationId,
-        featureId,
-        fetchOptions
-      ) => {
+      removeFeatureFlag: async (featureId, featureFlagId, fetchOptions) => {
         const res = (await $fetch(
-          `/organization-features/organizations/${organizationId}/features/${featureId}`,
+          `/features/${featureId}/flags/${featureFlagId}`,
           {
             method: "DELETE",
             ...fetchOptions,
@@ -198,9 +175,9 @@ export const featureFlagsClientPlugin = {
         return res;
       },
 
-      getFeatureFlags: async (organizationId, fetchOptions) => {
+      getFeatureFlags: async (fetchOptions) => {
         const res = (await $fetch(
-          `/organization-features/organizations/${organizationId}/features`,
+          `/features/flags`,
           {
             method: "GET",
             ...fetchOptions,
@@ -212,7 +189,7 @@ export const featureFlagsClientPlugin = {
       },
 
       getAvailableFeatures: async (fetchOptions) => {
-        const res = (await $fetch("/organization-features/features/available", {
+        const res = (await $fetch("/features/available", {
           method: "GET",
           ...fetchOptions,
         })) as
