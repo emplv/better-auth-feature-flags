@@ -99,7 +99,7 @@ export interface FeatureFlagsClientActions {
   >;
 }
 
-export const featureFlagsClientPlugin = {
+export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
   id: "features",
   $InferServerPlugin: {} as ReturnType<typeof featureFlagsPlugin>,
   getActions: ($fetch) => {
@@ -176,13 +176,10 @@ export const featureFlagsClientPlugin = {
       },
 
       getFeatureFlags: async (fetchOptions) => {
-        const res = (await $fetch(
-          `/features/flags`,
-          {
-            method: "GET",
-            ...fetchOptions,
-          }
-        )) as
+        const res = (await $fetch(`/features/flags`, {
+          method: "GET",
+          ...fetchOptions,
+        })) as
           | { data: FeatureFlagWithDetails[]; error: null }
           | { data: null; error: unknown };
         return res;
@@ -202,4 +199,4 @@ export const featureFlagsClientPlugin = {
 
     return actions;
   },
-} satisfies BetterAuthClientPlugin;
+});

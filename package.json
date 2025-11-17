@@ -1,6 +1,6 @@
 {
   "name": "@emplv/better-auth-feature-flags",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Better Auth plugin for managing feature flags",
   "main": "./dist/server/index.js",
   "types": "./dist/server/index.d.ts",
