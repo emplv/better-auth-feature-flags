@@ -5,7 +5,7 @@ import type {
   CreateFeatureInput,
   UpdateFeatureInput,
   SetFeatureFlagInput,
-} from "../shared/types";
+} from "../shared/types.js";
 
 export type {
   Feature,

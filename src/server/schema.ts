@@ -1,5 +1,5 @@
 import type { BetterAuthPlugin } from "better-auth";
-import { FeatureFlagsPluginOptions } from "./plugin";
+import { FeatureFlagsPluginOptions } from "./plugin.js";
 
 type Schema = BetterAuthPlugin["schema"];
 

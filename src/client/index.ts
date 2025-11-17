@@ -1,5 +1,5 @@
-export { featureFlagsClientPlugin } from "./plugin";
-export type { FeatureFlagsClientActions } from "./plugin";
+export { featureFlagsClientPlugin } from "./plugin.js";
+export type { FeatureFlagsClientActions } from "./plugin.js";
 export type {
   Feature,
   FeatureFlag,
@@ -7,5 +7,5 @@ export type {
   CreateFeatureInput,
   UpdateFeatureInput,
   SetFeatureFlagInput,
-} from "./types";
+} from "./types.js";
 

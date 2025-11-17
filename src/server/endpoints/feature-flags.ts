@@ -4,9 +4,9 @@ import type {
   FeatureFlag,
   FeatureFlagWithDetails,
   SetFeatureFlagInput,
-} from "../../shared/types";
-import { FeatureFlagsPluginOptions } from "../plugin";
-import { runBeforeHook, runAfterHook } from "../hook-helpers";
+} from "../../shared/types.js";
+import { FeatureFlagsPluginOptions } from "../plugin.js";
+import { runBeforeHook, runAfterHook } from "../hook-helpers.js";
 
 /**
  * Endpoints for managing organization-specific feature flags

@@ -3,9 +3,9 @@ import type {
   Feature,
   CreateFeatureInput,
   UpdateFeatureInput,
-} from "../../shared/types";
-import { FeatureFlagsPluginOptions } from "../plugin";
-import { runBeforeHook, runAfterHook } from "../hook-helpers";
+} from "../../shared/types.js";
+import { FeatureFlagsPluginOptions } from "../plugin.js";
+import { runBeforeHook, runAfterHook } from "../hook-helpers.js";
 
 /**
  * Admin-only endpoints for managing features

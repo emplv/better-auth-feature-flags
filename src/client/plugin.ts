@@ -1,13 +1,13 @@
 import type { BetterAuthClientPlugin } from "better-auth/client";
 import type { BetterFetchOption } from "@better-fetch/fetch";
-import type { featureFlagsPlugin } from "../server/plugin";
+import type { featureFlagsPlugin } from "../server/plugin.js";
 import type {
   CreateFeatureInput,
   UpdateFeatureInput,
   SetFeatureFlagInput,
   Feature,
   FeatureFlagWithDetails,
-} from "./types";
+} from "./types.js";
 
 export interface FeatureFlagsClientActions {
   /**

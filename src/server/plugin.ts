@@ -1,5 +1,5 @@
 import type { BetterAuthPlugin } from "better-auth";
-import { createFeatureFlagsSchema } from "./schema";
+import { createFeatureFlagsSchema } from "./schema.js";
 import {
   createCreateFeatureEndpoint,
   createListFeaturesEndpoint,
@@ -7,13 +7,13 @@ import {
   createDeleteFeatureEndpoint,
   createToggleFeatureEndpoint,
   createGetAvailableFeaturesEndpoint,
-} from "./endpoints/features";
+} from "./endpoints/features.js";
 import {
   createSetFeatureFlagEndpoint,
   createRemoveFeatureFlagEndpoint,
   createGetFeatureFlagsEndpoint,
-} from "./endpoints/feature-flags";
-import type { FeatureFlagsHooks } from "./hooks";
+} from "./endpoints/feature-flags.js";
+import type { FeatureFlagsHooks } from "./hooks.js";
 
 export interface FeatureFlagsPluginOptions {
   /**

@@ -5,7 +5,7 @@
 import type {
   BeforeHookResult,
   AfterHookResult,
-} from "./hooks";
+} from "./hooks.js";
 
 export async function runBeforeHook<T = unknown>(
   hook: ((...args: unknown[]) => Promise<BeforeHookResult<T>> | BeforeHookResult<T>) | undefined,

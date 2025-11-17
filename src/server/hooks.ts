@@ -8,7 +8,7 @@ import type {
   CreateFeatureInput,
   UpdateFeatureInput,
   SetFeatureFlagInput,
-} from "../shared/types";
+} from "../shared/types.js";
 
 export interface HookContext {
   session: { user: { id: string } } | null;

@@ -1,13 +1,13 @@
-export { featureFlagsPlugin } from "./plugin";
+export { featureFlagsPlugin } from "./plugin.js";
 export type {
   FeatureFlagsPluginOptions,
-} from "./plugin";
+} from "./plugin.js";
 export type {
   FeatureFlagsHooks,
   HookContext,
   BeforeHookResult,
   AfterHookResult,
-} from "./hooks";
+} from "./hooks.js";
 export type {
   Feature,
   FeatureFlag,
@@ -15,5 +15,5 @@ export type {
   CreateFeatureInput,
   UpdateFeatureInput,
   SetFeatureFlagInput,
-} from "../shared/types";
+} from "../shared/types.js";
 
