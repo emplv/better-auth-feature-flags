@@ -1,11 +1,15 @@
 import type { BetterAuthPlugin } from "better-auth";
 import { FeatureFlagsPluginOptions } from "./plugin";
 
+type Schema = BetterAuthPlugin["schema"];
+
 /**
  * Database schema definitions for the feature flags plugin
  */
-export const createFeatureFlagsSchema = (options?: FeatureFlagsPluginOptions) =>
-  ({
+export const createFeatureFlagsSchema = (
+  options?: FeatureFlagsPluginOptions
+): BetterAuthPlugin["schema"] => {
+  const schema: BetterAuthPlugin["schema"] = {
     features: {
       fields: {
         name: {
@@ -39,21 +43,6 @@ export const createFeatureFlagsSchema = (options?: FeatureFlagsPluginOptions) =>
             onDelete: "cascade",
           },
         },
-        ...(options?.allowOrganizationSpecificFeatureFlags
-          ? [
-              {
-                organizationId: {
-                  type: "string",
-                  required: false,
-                  references: {
-                    model: "organization",
-                    field: "id",
-                    onDelete: "cascade",
-                  },
-                },
-              },
-            ]
-          : []),
         featureId: {
           type: "string",
           required: true,
@@ -70,4 +59,18 @@ export const createFeatureFlagsSchema = (options?: FeatureFlagsPluginOptions) =>
       },
       modelName: "featureFlag",
     },
-  } as unknown as BetterAuthPlugin["schema"]);
+  };
+
+  if (options?.allowOrganizationSpecificFeatureFlags) {
+    schema.featureFlags.fields.organizationId = {
+      type: "string",
+      required: false,
+      references: {
+        model: "organization",
+        field: "id",
+        onDelete: "cascade",
+      },
+    };
+  }
+  return schema;
+};
