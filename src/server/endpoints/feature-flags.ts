@@ -16,7 +16,7 @@ export function createSetFeatureFlagEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/:featureId/flags",
+    "/features/:featureId/set-feature-flag",
     {
       method: "POST",
       use: [sessionMiddleware],
@@ -212,7 +212,7 @@ export function createRemoveFeatureFlagEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/:featureId/flags/:featureFlagId",
+    "/features/:featureId/remove-feature-flag/:featureFlagId",
     {
       method: "DELETE",
       use: [sessionMiddleware],
@@ -326,7 +326,7 @@ export function createGetFeatureFlagsEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/flags",
+    "/features/feature-flags",
     {
       method: "GET",
       use: [sessionMiddleware],

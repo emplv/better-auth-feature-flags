@@ -101,11 +101,10 @@ export interface FeatureFlagsClientActions {
 
 export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
   id: "features",
-  $InferServerPlugin: {} as ReturnType<typeof featureFlagsPlugin>,
-  getActions: ($fetch) => {
+  getActions: ($fetch): FeatureFlagsClientActions => {
     const actions: FeatureFlagsClientActions = {
       createFeature: async (data, fetchOptions) => {
-        const res = (await $fetch("/features", {
+        const res = (await $fetch("/features/create-feature", {
           method: "POST",
           body: data,
           ...fetchOptions,
@@ -114,7 +113,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
 
       updateFeature: async (featureId, data, fetchOptions) => {
-        const res = (await $fetch(`/features/${featureId}`, {
+        const res = (await $fetch(`/features/update-feature/${featureId}`, {
           method: "PUT",
           body: data,
           ...fetchOptions,
@@ -123,7 +122,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
 
       listFeatures: async (fetchOptions) => {
-        const res = (await $fetch("/features", {
+        const res = (await $fetch("/features/list-features", {
           method: "GET",
           ...fetchOptions,
         })) as
@@ -133,7 +132,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
 
       deleteFeature: async (featureId, fetchOptions) => {
-        const res = (await $fetch(`/features/${featureId}`, {
+        const res = (await $fetch(`/features/delete-feature/${featureId}`, {
           method: "DELETE",
           ...fetchOptions,
         })) as
@@ -143,7 +142,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
 
       toggleFeature: async (featureId, active, fetchOptions) => {
-        const res = (await $fetch(`/features/${featureId}/toggle`, {
+        const res = (await $fetch(`/features/toggle-feature/${featureId}`, {
           method: "POST",
           body: { active },
           ...fetchOptions,
@@ -152,7 +151,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
 
       setFeatureFlag: async (featureId, data, fetchOptions) => {
-        const res = (await $fetch(`/features/${featureId}/flags`, {
+        const res = (await $fetch(`/features/${featureId}/set-feature-flag`, {
           method: "POST",
           body: data,
           ...fetchOptions,
@@ -164,7 +163,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
 
       removeFeatureFlag: async (featureId, featureFlagId, fetchOptions) => {
         const res = (await $fetch(
-          `/features/${featureId}/flags/${featureFlagId}`,
+          `/features/${featureId}/remove-feature-flag/${featureFlagId}`,
           {
             method: "DELETE",
             ...fetchOptions,
@@ -176,7 +175,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
 
       getFeatureFlags: async (fetchOptions) => {
-        const res = (await $fetch(`/features/flags`, {
+        const res = (await $fetch(`/features/feature-flags`, {
           method: "GET",
           ...fetchOptions,
         })) as
@@ -186,7 +185,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
 
       getAvailableFeatures: async (fetchOptions) => {
-        const res = (await $fetch("/features/available", {
+        const res = (await $fetch("/features/available-features", {
           method: "GET",
           ...fetchOptions,
         })) as

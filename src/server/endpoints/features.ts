@@ -15,7 +15,7 @@ export function createCreateFeatureEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features",
+    "/features/create-feature",
     {
       method: "POST",
       use: [sessionMiddleware],
@@ -135,7 +135,7 @@ export function createListFeaturesEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features",
+    "/features/list-features",
     {
       method: "GET",
       use: [sessionMiddleware],
@@ -217,7 +217,7 @@ export function createUpdateFeatureEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/:id",
+    "/features/update-feature/:id",
     {
       method: "PUT",
       use: [sessionMiddleware],
@@ -338,7 +338,7 @@ export function createDeleteFeatureEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/:id",
+    "/features/delete-feature/:id",
     {
       method: "DELETE",
       use: [sessionMiddleware],
@@ -444,7 +444,7 @@ export function createToggleFeatureEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/:id/toggle",
+    "/features/toggle-feature/:id",
     {
       method: "POST",
       use: [sessionMiddleware],
@@ -559,7 +559,7 @@ export function createGetAvailableFeaturesEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/available",
+    "/features/available-features",
     {
       method: "GET",
       use: [sessionMiddleware],

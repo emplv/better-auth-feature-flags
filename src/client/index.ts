@@ -9,3 +9,12 @@ export type {
   SetFeatureFlagInput,
 } from "./types.js";
 
+// Module augmentation to ensure TypeScript recognizes authClient.features
+import type { FeatureFlagsClientActions } from "./plugin.js";
+
+declare module "better-auth/client" {
+  interface AuthClient {
+    features: FeatureFlagsClientActions;
+  }
+}
+

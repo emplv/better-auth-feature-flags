@@ -333,7 +333,7 @@ All admin endpoints require authentication and admin role verification.
 ##### Create Feature
 
 ```http
-POST /api/auth/features
+POST /api/auth/features/create-feature
 ```
 
 **Request Body:**
@@ -370,7 +370,7 @@ const { data, error } = await authClient.features.createFeature({
 ##### Update Feature
 
 ```http
-PUT /api/auth/features/:id
+PUT /api/auth/features/update-feature/:id
 ```
 
 **Request Body:**
@@ -407,7 +407,7 @@ const { data, error } = await authClient.features.updateFeature(
 ##### List Features
 
 ```http
-GET /api/auth/features
+GET /api/auth/features/list-features
 ```
 
 **Response:**
@@ -428,7 +428,7 @@ const { data, error } = await authClient.features.listFeatures();
 ##### Delete Feature
 
 ```http
-DELETE /api/auth/features/:id
+DELETE /api/auth/features/delete-feature/:id
 ```
 
 **Response:**
@@ -455,7 +455,7 @@ const { data, error } = await authClient.features.deleteFeature(
 ##### Toggle Feature
 
 ```http
-POST /api/auth/features/:id/toggle
+POST /api/auth/features/toggle-feature/:id
 ```
 
 **Request Body:**
@@ -489,7 +489,7 @@ const { data, error } = await authClient.features.toggleFeature(
 Enable or disable a feature for a specific feature - either user or organization.
 
 ```http
-POST /api/auth/features/:featureId/flags
+POST /api/auth/features/:featureId/set-feature-flag
 ```
 
 **Request Body:**
@@ -532,7 +532,7 @@ const { data, error } = await authClient.features.setFeatureFlag(
 Remove a feature from an organization.
 
 ```http
-DELETE /api/auth/features/:featureId/flags/:featureFlagId
+DELETE /api/auth/features/:featureId/remove-feature-flag/:featureFlagId
 ```
 
 **Response:**
@@ -562,7 +562,7 @@ const { data, error } = await authClient.features.removeFeatureFlag(
 Get all enabled features for a specific organization (members only).
 
 ```http
-GET /api/auth/features/flags/
+GET /api/auth/features/feature-flags/
 ```
 
 **Response:**
@@ -585,7 +585,7 @@ const { data, error } = await authClient.features.getFeatureFlags();
 Get all active features for the current user's active organization.
 
 ```http
-GET /api/auth/features/available
+GET /api/auth/features/available-features
 ```
 
 **Response:**
