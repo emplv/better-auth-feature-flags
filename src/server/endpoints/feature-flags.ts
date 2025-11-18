@@ -84,7 +84,7 @@ export function createSetFeatureFlagEndpoint(
         select: ["role"],
       });
 
-      if (!user || user.role !== "admin") {
+      if (!user || user.role.includes("admin")) {
         return ctx.json(
           { error: "Forbidden: Admin access required" },
           { status: 403 }
@@ -258,7 +258,7 @@ export function createRemoveFeatureFlagEndpoint(
         select: ["role"],
       });
 
-      if (!user || user.role !== "admin") {
+      if (!user || user.role.includes("admin")) {
         return ctx.json(
           { error: "Forbidden: Admin access required" },
           { status: 403 }
