@@ -29,6 +29,15 @@ export const createFeatureFlagsSchema = (
           type: "boolean",
           required: true,
         },
+        createdAt: {
+          type: "date",
+          required: false,
+          defaultValue: Date.now(),
+        },
+        updatedAt: {
+          type: "date",
+          required: false,
+        },
       },
       modelName: "feature",
     },
@@ -55,6 +64,15 @@ export const createFeatureFlagsSchema = (
         enabled: {
           type: "boolean",
           required: true,
+        },
+        createdAt: {
+          type: "date",
+          required: false,
+          defaultValue: Date.now(),
+        },
+        updatedAt: {
+          type: "date",
+          required: false,
         },
       },
       modelName: "featureFlag",
