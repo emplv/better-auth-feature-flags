@@ -63,7 +63,7 @@ export function createCreateFeatureEndpoint(
         select: ["role"],
       });
 
-      if (!user || user.role.includes("admin")) {
+      if (!user || !user.role.includes("admin")) {
         return ctx.json(
           { error: "Forbidden: Admin access required" },
           { status: 403 }
@@ -177,7 +177,7 @@ export function createListFeaturesEndpoint(
         select: ["role"],
       });
 
-      if (!user || user.role.includes("admin")) {
+      if (!user || !user.role.includes("admin")) {
         return ctx.json(
           { error: "Forbidden: Admin access required" },
           { status: 403 }
@@ -266,7 +266,7 @@ export function createUpdateFeatureEndpoint(
         select: ["role"],
       });
 
-      if (!user || user.role.includes("admin")) {
+      if (!user || !user.role.includes("admin")) {
         return ctx.json(
           { error: "Forbidden: Admin access required" },
           { status: 403 }
@@ -382,7 +382,7 @@ export function createDeleteFeatureEndpoint(
         select: ["role"],
       });
 
-      if (!user || user.role.includes("admin")) {
+      if (!user || !user.role.includes("admin")) {
         return ctx.json(
           { error: "Forbidden: Admin access required" },
           { status: 403 }
@@ -493,7 +493,7 @@ export function createToggleFeatureEndpoint(
         select: ["role"],
       });
 
-      if (!user || user.role.includes("admin")) {
+      if (!user || !user.role.includes("admin")) {
         return ctx.json(
           { error: "Forbidden: Admin access required" },
           { status: 403 }
