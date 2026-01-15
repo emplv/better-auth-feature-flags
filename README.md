@@ -350,10 +350,7 @@ POST /api/auth/features/create-feature
 **Response:**
 
 ```typescript
-{
-  data: Feature;
-  error: null;
-}
+Feature | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -386,10 +383,7 @@ PUT /api/auth/features/update-feature/:id
 **Response:**
 
 ```typescript
-{
-  data: Feature;
-  error: null;
-}
+Feature | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -413,10 +407,7 @@ GET /api/auth/features/list-features
 **Response:**
 
 ```typescript
-{
-  data: Feature[];
-  error: null;
-}
+Feature[] | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -434,12 +425,7 @@ DELETE /api/auth/features/delete-feature/:id
 **Response:**
 
 ```typescript
-{
-  data: {
-    success: boolean;
-  }
-  error: null;
-}
+{ success: boolean } | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -469,10 +455,7 @@ POST /api/auth/features/toggle-feature/:id
 **Response:**
 
 ```typescript
-{
-  data: Feature;
-  error: null;
-}
+Feature | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -507,10 +490,7 @@ POST /api/auth/features/:featureId/set-feature-flag
 **Response:**
 
 ```typescript
-{
-  data: FeatureFlag;
-  error: null;
-}
+FeatureFlagWithDetails | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -538,12 +518,7 @@ DELETE /api/auth/features/:featureId/remove-feature-flag/:featureFlagId
 **Response:**
 
 ```typescript
-{
-  data: {
-    success: boolean;
-  }
-  error: null;
-}
+{ success: boolean } | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -568,10 +543,7 @@ GET /api/auth/features/get-feature-flags/
 **Response:**
 
 ```typescript
-{
-  data: FeatureFlagWithDetails[];
-  error: null;
-}
+FeatureFlagWithDetails[] | { data: null; error: unknown }
 ```
 
 **Example:**
@@ -591,10 +563,7 @@ GET /api/auth/features/get-available-features
 **Response:**
 
 ```typescript
-{
-  data: Feature[];
-  error: null;
-}
+FeatureFlagWithDetails[] | { data: null; error: unknown }
 ```
 
 **Example:**
