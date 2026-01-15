@@ -126,7 +126,7 @@ export function createCreateFeatureEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || feature });
+      return ctx.json(afterResult.data || feature);
     }
   );
 }
@@ -208,7 +208,7 @@ export function createListFeaturesEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || features });
+      return ctx.json(afterResult.data || features);
     }
   );
 }
@@ -329,7 +329,7 @@ export function createUpdateFeatureEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || feature });
+      return ctx.json((afterResult.data || feature) as Feature);
     }
   );
 }
@@ -435,7 +435,7 @@ export function createDeleteFeatureEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || { success: true } });
+      return ctx.json(afterResult.data || { success: true });
     }
   );
 }
@@ -550,7 +550,7 @@ export function createToggleFeatureEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || feature });
+      return ctx.json((afterResult.data || feature) as Feature);
     }
   );
 }
@@ -559,7 +559,7 @@ export function createGetAvailableFeaturesEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/available-features",
+    "/features/get-available-features",
     {
       method: "GET",
       use: [sessionMiddleware],
@@ -617,7 +617,7 @@ export function createGetAvailableFeaturesEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || features });
+      return ctx.json(afterResult.data || features);
     }
   );
 }

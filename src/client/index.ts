@@ -13,8 +13,7 @@ export type {
 import type { FeatureFlagsClientActions } from "./plugin.js";
 
 declare module "better-auth/client" {
-  interface AuthClient {
+  interface BetterAuthClient {
     features: FeatureFlagsClientActions;
   }
 }
-

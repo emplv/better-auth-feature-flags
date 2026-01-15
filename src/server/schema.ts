@@ -1,8 +1,6 @@
 import type { BetterAuthPlugin } from "better-auth";
 import { FeatureFlagsPluginOptions } from "./plugin.js";
 
-type Schema = BetterAuthPlugin["schema"];
-
 /**
  * Database schema definitions for the feature flags plugin
  */
@@ -31,7 +29,6 @@ export const createFeatureFlagsSchema = (
         },
         createdAt: {
           type: "date",
-          required: false,
           defaultValue: Date.now(),
         },
         updatedAt: {
@@ -67,8 +64,8 @@ export const createFeatureFlagsSchema = (
         },
         createdAt: {
           type: "date",
-          required: false,
-          defaultValue: Date.now(),
+          required: true,
+          defaultValue: Date,
         },
         updatedAt: {
           type: "date",

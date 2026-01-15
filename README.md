@@ -562,7 +562,7 @@ const { data, error } = await authClient.features.removeFeatureFlag(
 Get all enabled features for a specific organization (members only).
 
 ```http
-GET /api/auth/features/feature-flags/
+GET /api/auth/features/get-feature-flags/
 ```
 
 **Response:**
@@ -585,7 +585,7 @@ const { data, error } = await authClient.features.getFeatureFlags();
 Get all active features for the current user's active organization.
 
 ```http
-GET /api/auth/features/available-features
+GET /api/auth/features/get-available-features
 ```
 
 **Response:**

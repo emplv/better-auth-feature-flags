@@ -203,7 +203,7 @@ export function createSetFeatureFlagEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || resultData });
+      return ctx.json(afterResult.data || resultData);
     }
   );
 }
@@ -317,7 +317,7 @@ export function createRemoveFeatureFlagEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || { success: true } });
+      return ctx.json(afterResult.data || { success: true });
     }
   );
 }
@@ -326,7 +326,7 @@ export function createGetFeatureFlagsEndpoint(
   options?: FeatureFlagsPluginOptions
 ) {
   return createAuthEndpoint(
-    "/features/feature-flags",
+    "/features/get-feature-flags",
     {
       method: "GET",
       use: [sessionMiddleware],
@@ -426,7 +426,7 @@ export function createGetFeatureFlagsEndpoint(
         );
       }
 
-      return ctx.json({ data: afterResult.data || enabledFeatureFlags });
+      return ctx.json(afterResult.data || enabledFeatureFlags);
     }
   );
 }
