@@ -36,5 +36,9 @@
   "devDependencies": {
     "@types/node": "^22.9.0",
     "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emplv/better-auth-feature-flags.git"
   }
 }

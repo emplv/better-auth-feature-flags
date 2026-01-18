@@ -1,0 +1,77 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump (patch|minor|major) OR an exact version (e.g. 1.2.3)"
+        required: true
+        default: "patch"
+      dist_tag:
+        description: "npm dist-tag (e.g. latest, next)"
+        required: true
+        default: "latest"
+
+permissions:
+  contents: write # needed to push commit/tag back to repo
+  id-token: write # required for npm trusted publishing (OIDC)
+  actions: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.18.0"
+          registry-url: "https://registry.npmjs.org"
+
+      # npm docs note trusted publishing requires newer npm CLI; installing latest is common in CI
+      - name: Upgrade npm CLI
+        run: npm i -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version (commit + tag)
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          # If input looks like an exact semver (x.y.z), use it; else treat as patch/minor/major
+          if echo "$BUMP" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            npm version "$BUMP" -m "chore(release): v%s"
+          else
+            npm version "$BUMP" -m "chore(release): v%s"
+          fi
+
+      - name: Push commit and tags
+        run: git push --follow-tags
+
+      - name: Publish to npm (OIDC)
+        env:
+          # If your `npm run publish` does NOT directly call `npm publish`,
+          # this env var enables provenance generation for third-party tooling.
+          # Safe to keep even if you call npm publish directly.
+          NPM_CONFIG_PROVENANCE: "true"
+          DIST_TAG: ${{ inputs.dist_tag }}
+        run: |
+          npm publish --tag "$DIST_TAG" --provenance
