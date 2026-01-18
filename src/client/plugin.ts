@@ -16,7 +16,7 @@ export interface FeatureFlagsClientActions {
   createFeature: (
     data: CreateFeatureInput,
     fetchOptions?: BetterFetchOption
-  ) => Promise<Feature | { data: null; error: unknown }>;
+  ) => Promise<Feature>;
 
   /**
    * Update an existing feature (admin only)
@@ -25,14 +25,14 @@ export interface FeatureFlagsClientActions {
     featureId: string,
     data: UpdateFeatureInput,
     fetchOptions?: BetterFetchOption
-  ) => Promise<Feature | { data: null; error: unknown }>;
+  ) => Promise<Feature>;
 
   /**
    * List all features (admin only)
    */
   listFeatures: (
     fetchOptions?: BetterFetchOption
-  ) => Promise<Feature[] | { data: null; error: unknown }>;
+  ) => Promise<Feature[]>;
 
   /**
    * Delete a feature (admin only)
@@ -40,7 +40,7 @@ export interface FeatureFlagsClientActions {
   deleteFeature: (
     featureId: string,
     fetchOptions?: BetterFetchOption
-  ) => Promise<{ success: boolean } | { data: null; error: unknown }>;
+  ) => Promise<{ success: boolean }>;
 
   /**
    * Toggle a feature's global active state (admin only)
@@ -49,7 +49,7 @@ export interface FeatureFlagsClientActions {
     featureId: string,
     active: boolean,
     fetchOptions?: BetterFetchOption
-  ) => Promise<Feature | { data: null; error: unknown }>;
+  ) => Promise<Feature>;
 
   /**
    * Enable or disable a feature flag for a specific user/organization (admin only)
@@ -58,7 +58,7 @@ export interface FeatureFlagsClientActions {
     featureId: string,
     data: SetFeatureFlagInput,
     fetchOptions?: BetterFetchOption
-  ) => Promise<FeatureFlagWithDetails | { data: null; error: unknown }>;
+  ) => Promise<FeatureFlagWithDetails>;
 
   /**
    * Remove a feature flag from an organization (admin only)
@@ -67,21 +67,21 @@ export interface FeatureFlagsClientActions {
     featureId: string,
     featureFlagId: string,
     fetchOptions?: BetterFetchOption
-  ) => Promise<{ success: boolean } | { data: null; error: unknown }>;
+  ) => Promise<{ success: boolean }>;
 
   /**
    * Get all enabled feature flags for a specific organization (members only)
    */
   getFeatureFlags: (
     fetchOptions?: BetterFetchOption
-  ) => Promise<FeatureFlagWithDetails[] | { data: null; error: unknown }>;
+  ) => Promise<FeatureFlagWithDetails[]>;
 
   /**
    * Get all enabled feature flags for the current user's active organization
    */
   getAvailableFeatures: (
     fetchOptions?: BetterFetchOption
-  ) => Promise<FeatureFlagWithDetails[] | { data: null; error: unknown }>;
+  ) => Promise<FeatureFlagWithDetails[]>;
 }
 
 export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
@@ -93,7 +93,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
           method: "POST",
           body: data,
           ...fetchOptions,
-        })) as Feature | { data: null; error: unknown };
+        })) as Feature;
         return res;
       },
 
@@ -102,7 +102,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
           method: "PUT",
           body: data,
           ...fetchOptions,
-        })) as Feature | { data: null; error: unknown };
+        })) as Feature;
         return res;
       },
 
@@ -110,7 +110,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
         const res = (await $fetch("/features/list-features", {
           method: "GET",
           ...fetchOptions,
-        })) as Feature[] | { data: null; error: unknown };
+        })) as Feature[];
         return res;
       },
 
@@ -118,7 +118,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
         const res = (await $fetch(`/features/delete-feature/${featureId}`, {
           method: "DELETE",
           ...fetchOptions,
-        })) as { success: boolean } | { data: null; error: unknown };
+        })) as { success: boolean };
         return res;
       },
 
@@ -127,7 +127,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
           method: "POST",
           body: { active },
           ...fetchOptions,
-        })) as Feature | { data: null; error: unknown };
+        })) as Feature;
         return res;
       },
 
@@ -136,7 +136,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
           method: "POST",
           body: data,
           ...fetchOptions,
-        })) as FeatureFlagWithDetails | { data: null; error: unknown };
+        })) as FeatureFlagWithDetails;
         return res;
       },
 
@@ -147,7 +147,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
             method: "DELETE",
             ...fetchOptions,
           }
-        )) as { success: boolean } | { data: null; error: unknown };
+        )) as { success: boolean };
         return res;
       },
 
@@ -155,7 +155,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
         const res = (await $fetch(`/features/get-feature-flags`, {
           method: "GET",
           ...fetchOptions,
-        })) as FeatureFlagWithDetails[] | { data: null; error: unknown };
+        })) as FeatureFlagWithDetails[];
         return res;
       },
 
@@ -163,7 +163,7 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
         const res = (await $fetch("/features/get-available-features", {
           method: "GET",
           ...fetchOptions,
-        })) as FeatureFlagWithDetails[] | { data: null; error: unknown };
+        })) as FeatureFlagWithDetails[];
 
         return res;
       },

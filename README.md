@@ -350,7 +350,7 @@ POST /api/auth/features/create-feature
 **Response:**
 
 ```typescript
-Feature | { data: null; error: unknown }
+Feature
 ```
 
 **Example:**
@@ -383,7 +383,7 @@ PUT /api/auth/features/update-feature/:id
 **Response:**
 
 ```typescript
-Feature | { data: null; error: unknown }
+Feature
 ```
 
 **Example:**
@@ -407,7 +407,7 @@ GET /api/auth/features/list-features
 **Response:**
 
 ```typescript
-Feature[] | { data: null; error: unknown }
+Feature[]
 ```
 
 **Example:**
@@ -425,7 +425,7 @@ DELETE /api/auth/features/delete-feature/:id
 **Response:**
 
 ```typescript
-{ success: boolean } | { data: null; error: unknown }
+{ success: boolean }
 ```
 
 **Example:**
@@ -455,7 +455,7 @@ POST /api/auth/features/toggle-feature/:id
 **Response:**
 
 ```typescript
-Feature | { data: null; error: unknown }
+Feature
 ```
 
 **Example:**
@@ -490,7 +490,7 @@ POST /api/auth/features/:featureId/set-feature-flag
 **Response:**
 
 ```typescript
-FeatureFlagWithDetails | { data: null; error: unknown }
+FeatureFlagWithDetails
 ```
 
 **Example:**
@@ -518,7 +518,7 @@ DELETE /api/auth/features/:featureId/remove-feature-flag/:featureFlagId
 **Response:**
 
 ```typescript
-{ success: boolean } | { data: null; error: unknown }
+{ success: boolean }
 ```
 
 **Example:**
@@ -543,7 +543,7 @@ GET /api/auth/features/get-feature-flags/
 **Response:**
 
 ```typescript
-FeatureFlagWithDetails[] | { data: null; error: unknown }
+FeatureFlagWithDetails[]
 ```
 
 **Example:**
@@ -563,7 +563,7 @@ GET /api/auth/features/get-available-features
 **Response:**
 
 ```typescript
-FeatureFlagWithDetails[] | { data: null; error: unknown }
+FeatureFlagWithDetails[]
 ```
 
 **Example:**
@@ -578,42 +578,42 @@ const { data, error } = await authClient.features.getAvailableFeatures();
 
 ```typescript
 // Create a feature
-createFeature(data: CreateFeatureInput): Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
+createFeature(data: CreateFeatureInput): Promise<Feature>;
 
 // Update a feature
-updateFeature(featureId: string, data: UpdateFeatureInput): Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
+updateFeature(featureId: string, data: UpdateFeatureInput): Promise<Feature>;
 
 // List all features
-listFeatures(): Promise<{ data: Feature[]; error: null } | { data: null; error: unknown }>;
+listFeatures(): Promise<Feature[]>;
 
 // Delete a feature
-deleteFeature(featureId: string): Promise<{ data: { success: boolean }; error: null } | { data: null; error: unknown }>;
+deleteFeature(featureId: string): Promise<{ success: boolean }>;
 
 // Toggle feature global state
-toggleFeature(featureId: string, active: boolean): Promise<{ data: Feature; error: null } | { data: null; error: unknown }>;
+toggleFeature(featureId: string, active: boolean): Promise<Feature>;
 
 // Enable/disable feature for organization
 setFeatureFlag(
   userIdOrOrganizationId: string,
   featureId: string,
   data: SetFeatureFlagInput
-): Promise<{ data: FeatureFlagWithDetails; error: null } | { data: null; error: unknown }>;
+): Promise<FeatureFlagWithDetails>;
 
 // Remove feature from organization
 removeFeatureFlag(
   featureFlagId: string,
   featureId: string
-): Promise<{ data: { success: boolean }; error: null } | { data: null; error: unknown }>;
+): Promise<{ success: boolean }>;
 ```
 
 ### User Methods
 
 ```typescript
 // Get features for specific organization
-getFeatureFlags(organizationId: string): Promise<{ data: FeatureFlagWithDetails[]; error: null } | { data: null; error: unknown }>;
+getFeatureFlags(organizationId: string): Promise<FeatureFlagWithDetails[]>;
 
 // Get available features for current active organization
-getAvailableFeatures(): Promise<{ data: FeatureFlagWithDetails[]; error: null } | { data: null; error: unknown }>;
+getAvailableFeatures(): Promise<FeatureFlagWithDetails[]>;
 ```
 
 ## Feature Flag Logic
