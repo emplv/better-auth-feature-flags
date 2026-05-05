@@ -356,11 +356,17 @@ export function createGetFeatureFlagsEndpoint(
         return ctx.json({ error: "Unauthorized" }, { status: 401 });
       }
 
+      // Match flags scoped to the current user OR to the active organization.
+      // These are stored as separate rows (user-scoped flags have userId set
+      // and organizationId null, and vice-versa), so the conditions must be
+      // OR-joined — an AND join only matches per-user-per-org rows that the
+      // plugin never writes.
       const where: any[] = [
         {
           field: "userId",
           operator: "eq",
           value: session.user.id,
+          connector: "OR",
         },
       ];
 
@@ -369,6 +375,7 @@ export function createGetFeatureFlagsEndpoint(
           field: "organizationId",
           operator: "eq",
           value: session.session.activeOrganizationId,
+          connector: "OR",
         });
       }
 
