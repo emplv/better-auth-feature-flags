@@ -31,10 +31,11 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "better-auth": "^1.4.13"
+    "better-auth": "^1.6.9"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
+    "better-auth": "^1.6.9",
     "typescript": "^5.0.0"
   },
   "repository": {
