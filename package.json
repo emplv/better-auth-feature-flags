@@ -1,6 +1,6 @@
 {
   "name": "@emplv/better-auth-feature-flags",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Better Auth plugin for managing feature flags",
   "main": "./dist/server/index.js",
@@ -31,11 +31,11 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "better-auth": "^1.6.9"
+    "better-auth": "^1.7.2"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
-    "better-auth": "^1.6.9",
+    "better-auth": "^1.7.2",
     "typescript": "^5.0.0"
   },
   "repository": {

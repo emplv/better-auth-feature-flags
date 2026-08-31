@@ -38,9 +38,10 @@ export interface FeatureFlagsPluginOptions {
  * - The feature is globally available (features.active = true)
  * - AND the organization has the feature explicitly enabled (featureFlags.enabled = true)
  */
-export const featureFlagsPlugin = (
-  options?: FeatureFlagsPluginOptions
-): BetterAuthPlugin => {
+// Returned as a literal type (via `satisfies`) instead of the widened
+// `BetterAuthPlugin` so better-auth 1.7 can infer the plugin's endpoints on
+// `auth.api` and the client can infer server routes via `$InferServerPlugin`.
+export const featureFlagsPlugin = (options?: FeatureFlagsPluginOptions) => {
   return {
     id: "features",
     schema: createFeatureFlagsSchema(options),

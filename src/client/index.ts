@@ -1,5 +1,5 @@
 export { featureFlagsClientPlugin } from "./plugin.js";
-export type { FeatureFlagsClientActions } from "./plugin.js";
+export type { FeatureFlagsClientActions, FeatureFlagsClientPlugin } from "./plugin.js";
 export type {
   Feature,
   FeatureFlag,
@@ -9,11 +9,7 @@ export type {
   SetFeatureFlagInput,
 } from "./types.js";
 
-// Module augmentation to ensure TypeScript recognizes authClient.features
-import type { FeatureFlagsClientActions } from "./plugin.js";
-
-declare module "better-auth/client" {
-  interface BetterAuthClient {
-    features: FeatureFlagsClientActions;
-  }
-}
+// No module augmentation needed: since 1.7-compatible builds the plugin's
+// actions are namespaced under `features` and inferred directly by
+// `createAuthClient` (better-auth 1.7 removed the `BetterAuthClient`
+// interface the old augmentation targeted).
