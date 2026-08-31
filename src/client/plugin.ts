@@ -1,5 +1,5 @@
 import type { BetterAuthClientPlugin } from "better-auth/client";
-import type { BetterFetchOption } from "@better-fetch/fetch";
+import type { BetterFetch, BetterFetchOption } from "@better-fetch/fetch";
 
 import type {
   CreateFeatureInput,
@@ -84,10 +84,29 @@ export interface FeatureFlagsClientActions {
   ) => Promise<FeatureFlagWithDetails[]>;
 }
 
-export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
-  id: "features",
-  getActions: ($fetch): FeatureFlagsClientActions => {
-    const actions: FeatureFlagsClientActions = {
+/**
+ * Public type of the client plugin.
+ *
+ * better-auth 1.7's client type inference collapses every plugin's API to
+ * `never` when any plugin in the `plugins` array has the widened
+ * `BetterAuthClientPlugin` type, so the plugin exposes a precise literal
+ * shape instead. `getActions` is typed without its `$fetch` parameter on
+ * purpose: referencing `BetterFetch` here would tie the declaration to this
+ * package's copy of `@better-fetch/fetch` and break assignability against
+ * the host app's copy (functions with fewer parameters stay assignable).
+ * Actions are namespaced under `features`, matching the documented
+ * `authClient.features.*` API, so consumers get them typed without casts.
+ */
+export interface FeatureFlagsClientPlugin {
+  id: "features";
+  getActions: () => { features: FeatureFlagsClientActions };
+}
+
+export const featureFlagsClientPlugin = (): FeatureFlagsClientPlugin => {
+  const plugin = {
+    id: "features",
+    getActions: ($fetch: BetterFetch) => {
+      const actions: FeatureFlagsClientActions = {
       createFeature: async (data, fetchOptions) => {
         const res = (await $fetch("/features/create-feature", {
           method: "POST",
@@ -169,6 +188,8 @@ export const featureFlagsClientPlugin = (): BetterAuthClientPlugin => ({
       },
     };
 
-    return actions;
-  },
-});
+      return { features: actions };
+    },
+  } satisfies BetterAuthClientPlugin;
+  return plugin as FeatureFlagsClientPlugin;
+};
