@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] — 2026-11-25
+
+### Security
+
+- Raised the `better-auth` peer dependency floor from `^1.7.2` to `^1.7.7`. Versions
+  `1.4.0-beta.18`–`1.7.6` pull in a vulnerable `@better-auth/drizzle-adapter`
+  ([GHSA-44jh-23m7-hpcf](https://github.com/advisories/GHSA-44jh-23m7-hpcf)). With the new floor,
+  installing this plugin no longer accepts a vulnerable host version.
+- Refreshed the dev lockfile (`better-auth` 1.7.28, `zod` 4.6.7, `defu` 6.1.7). `npm audit` now
+  reports 0 vulnerabilities.
+
+### Notes
+
+- No source or API changes. Builds and typechecks against both `better-auth@1.7.7` (the floor) and
+  `1.7.28` (the latest 1.7.x).
+
 ## [0.3.0] — 2026-08-31
 
 ### Changed
